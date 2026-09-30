@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BlipCraft Studio - Ferramentas & Injetor de Trackings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0B1120;
+      --bg-card: #131D31;
+      --bg-card-hover: #1A2744;
+      --bg-input: #0F172A;
+      --border-color: #233354;
+      --border-focus: #00A3FF;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      --primary: #00A3FF;
+      --primary-hover: #0084D1;
+      --primary-glow: rgba(0, 163, 255, 0.25);
+      --secondary: #00D2B4;
+      --accent: #6366F1;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --sidebar-width: 280px;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* Layout */
+    .app-layout {
+      display: flex;
+      width: 100vw;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--bg-card);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      z-index: 100;
+    }
+
+    .brand {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #00A3FF, #00D2B4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 20px;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .brand-info h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, #FFFFFF, #CBD5E1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-info p {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .nav-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-dim);
+      padding: 8px 12px 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .nav-item:hover {
+      background-color: var(--bg-card-hover);
+      color: var(--text-main);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(0, 163, 255, 0.15), rgba(0, 163, 255, 0.05));
+      color: var(--primary);
+      border: 1px solid rgba(0, 163, 255, 0.3);
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .badge-git {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 32px 40px 60px;
+      max-width: 1300px;
+      overflow-y: auto;
+    }
+
+    /* Views */
+    .view-panel {
+      display: none;
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+
+    .view-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header Component */
+    .page-header {
+      margin-bottom: 28px;
+    }
+
+    .page-header h2 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .page-header p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    /* Cards */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+    }
+
+    /* Forms & Inputs */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .form-control {
+      width: 100%;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      font-size: 14px;
+      color: var(--text-main);
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: white;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-card-hover);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #223254;
+      border-color: #2f4470;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: white;
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Upload Drag & Drop */
+    .upload-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 36px 20px;
+      text-align: center;
+      background-color: rgba(15, 23, 42, 0.5);
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--primary);
+      background-color: rgba(0, 163, 255, 0.05);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      color: var(--primary);
+    }
+
+    /* Checkbox & Options Grid */
+    .preset-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .preset-pill {
+      padding: 8px 14px;
+      border-radius: 20px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .preset-pill:hover {
+      border-color: var(--text-dim);
+      color: var(--text-main);
+    }
+
+    .preset-pill.active {
+      background-color: rgba(0, 163, 255, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .track-options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .track-option-card {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .track-option-card:hover {
+      border-color: var(--text-dim);
+      background-color: #121c33;
+    }
+
+    .track-option-card.checked {
+      border-color: rgba(0, 163, 255, 0.5);
+      background: linear-gradient(135deg, rgba(0, 163, 255, 0.08), transparent);
+    }
+
+    .custom-checkbox {
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .option-info h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .option-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .tag-scope {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .tag-flow { background: rgba(0, 163, 255, 0.2); color: #38BDF8; }
+    .tag-api { background: rgba(245, 158, 11, 0.2); color: #FBBF24; }
+    .tag-global { background: rgba(168, 85, 247, 0.2); color: #C084FC; }
+
+    /* Code & JSON Output */
+    .code-container {
+      position: relative;
+      margin-top: 16px;
+    }
+
+    .json-code {
+      background-color: #070B14;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #38BDF8;
+      max-height: 380px;
+      overflow: auto;
+      white-space: pre;
+    }
+
+    .copy-floating-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 5;
+    }
+
+    /* Live Preview Bubble */
+    .preview-card {
+      background: #0D1629;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .whatsapp-bubble {
+      background-color: #1F2C34;
+      border-radius: 10px 10px 10px 2px;
+      padding: 14px;
+      max-width: 380px;
+      color: #E9EDEF;
+      font-size: 14px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .whatsapp-bubble .msg-header {
+      font-weight: 700;
+      color: #FFF;
+      margin-bottom: 6px;
+    }
+
+    .whatsapp-bubble .msg-body {
+      white-space: pre-wrap;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .whatsapp-bubble .msg-footer {
+      font-size: 11px;
+      color: #8696A0;
+      margin-bottom: 12px;
+    }
+
+    .whatsapp-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: #2A3942;
+      color: #00A884;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 4px;
+      cursor: pointer;
+    }
+
+    .contact-card-preview {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #233138;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .contact-avatar {
+      width: 44px;
+      height: 44px;
+      background: #6B7B85;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 550px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h3 {
+      font-size: 18px;
+      color: var(--text-main);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* Notification Alert */
+    .toast-alert {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: #064E3B;
+      border: 1px solid var(--success);
+      color: #A7F3D0;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: var(--transition);
+      z-index: 2000;
+    }
+
+    .toast-alert.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Schedule Items List */
+    .schedule-day-group {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .schedule-day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .schedule-time-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #1E293B;
+      border: 1px solid #334155;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-right: 8px;
+      margin-top: 4px;
+    }
+
+    .schedule-remove-btn {
+      color: var(--danger);
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .app-layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      .main-content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-info">
+        <h1>BlipCraft Studio</h1>
+        <p>Dev Suite & Trackings</p>
+      </div>
+    </div>
+
+    <ul class="nav-list">
+      <div class="nav-section-title">Injetores & Automação</div>
+      <li class="nav-item active" data-tab="tab-tracking">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Injetor de Trackings
+      </li>
+
+      <div class="nav-section-title">Geradores WhatsApp</div>
+      <li class="nav-item" data-tab="tab-menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+        Menu Interativo (Lista)
+      </li>
+      <li class="nav-item" data-tab="tab-cta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Botão com Link (CTA)
+      </li>
+      <li class="nav-item" data-tab="tab-contato">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Contato Dinâmico (vCard)
+      </li>
+
+      <div class="nav-section-title">Configurações de Fluxo</div>
+      <li class="nav-item" data-tab="tab-horario">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Horário de Atendimento
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <span>100% Client-Side</span>
+      <span class="badge-git">GitHub Ready</span>
+    </div>
+  </aside>
+
+  <!-- Main View Area -->
+  <main class="main-content">
+
+    <!-- TAB 1: INJETOR DE TRACKINGS -->
+    <section id="tab-tracking" class="view-panel active">
+      <div class="page-header">
+        <h2>🎯 Bot Tracking Transformer</h2>
+        <p>Injete eventos analíticos personalizados no fluxo do seu bot Blip com controle total de quais trackings ativar.</p>
+      </div>
+
+      <!-- Upload Card -->
+      <div class="card">
+        <div class="card-title">1. Selecione ou Arraste o JSON do Bot</div>
+        <div class="upload-zone" id="dropZone">
+          <input type="file" id="botFileInput" accept=".json,application/json" />
+          <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <p style="font-weight: 600; font-size: 15px;" id="uploadLabel">Clique para escolher ou solte o arquivo <code>bot.json</code> aqui</p>
+          <p style="color: var(--text-dim); font-size: 12px; margin-top: 6px;">Seus dados nunca saem do seu navegador. 100% privado e local.</p>
+        </div>
+        <div id="botFileStatus" style="margin-top: 12px; font-size: 13px; color: var(--text-muted);"></div>
+      </div>
+
+      <!-- Trackings Configuration -->
+      <div class="card">
+        <div class="card-title">2. Escolha os Trackings que Deseja Injetar</div>
+        
+        <!-- Presets -->
+        <div class="preset-pills">
+          <span style="font-size: 12px; color: var(--text-dim); align-self: center; margin-right: 4px;">Atalhos:</span>
+          <div class="preset-pill active" onclick="applyTrackingPreset('full')">✨ Completo (Recomendado)</div>
+          <div class="preset-pill" onclick="applyTrackingPreset('apis')">🌐 Apenas Chamadas de API</div>
+          <div class="preset-pill" onclick="applyTrackingPreset('navigation')">🧭 Apenas Navegação de Blocos</div>
+          <div class="preset-pill" onclick="applyTrackingPreset('clear')">🚫 Limpar Seleção</div>
+        </div>
+
+        <div class="track-options-grid">
+          <!-- Entrada Bloco -->
+          <label class="track-option-card checked">
+            <input type="checkbox" class="custom-checkbox" id="trk_block_entry" checked>
+            <div class="option-info">
+              <h4>Entrada do Bloco <span class="tag-scope tag-flow">Bloco</span></h4>
+              <p>Registra quando o usuário acessa o bloco (<code>{{block.$title}}</code> / <code>{{contact.identity}}</code>).</p>
+            </div>
+          </label>
+
+          <!-- Saída Conteúdo -->
+          <label class="track-option-card checked">
+            <input type="checkbox" class="custom-checkbox" id="trk_block_leave" checked>
+            <div class="option-info">
+              <h4>Saída com Input <span class="tag-scope tag-flow">Bloco</span></h4>
+              <p>Registra a saída com o conteúdo digitado (<code>{{block.$title}} Conteudo</code>).</p>
+            </div>
+          </label>
+
+          <!-- Exibição de Mensagem -->
+          <label class="track-option-card checked">
+            <input type="checkbox" class="custom-checkbox" id="trk_data_entering" checked>
+            <div class="option-info">
+              <h4>Exibição de Mensagem <span class="tag-scope tag-flow">Métricas</span></h4>
+              <p>Adiciona <code>exibicao|{{state.name}}</code> apenas em blocos que enviam mensagens ao usuário.</p>
+            </div>
+          </label>
+
+          <!-- Input de Dados -->
+          <label class="track-option-card checked">
+            <input type="checkbox" class="custom-checkbox" id="trk_data_leaving" checked>
+            <div class="option-info">
+              <h4>Input Recebido <span class="tag-scope tag-flow">Métricas</span></h4>
+              <p>Adiciona <code>input|{{state.name}}</code> guardando o valor digitado nos extras.</p>
+            </div>
+          </label>
+
+          <!-- Validação de Sugestões / Menus -->
+          <label class="track-option-card checked">
+            <input type="checkbox" class="custom-checkbox" id="trk_suggestions" checked>
+            <div class="option-info">
+              <h4>Menu/Sugestões Válido vs Inesperado <span class="tag-scope tag-flow">Script</span></h4>
+              <p>Gera script de validação de opções e trackings de <code>selecao</code> e <code>inesperado</code>.</p>
+            </div>
+          </label>
+
+          <!-- API Entrada -->
+          <label class="track-option-card checked">
+            <input type="checkbox" class="custom-checkbox" id="trk_api_entry" checked>
+            <div class="option-info">
+              <h4>API - Início da Chamada <span class="tag-scope tag-api">HTTP</span></h4>
+              <p>Gera ID único de requisição, grava método, URL e payload da chamada HTTP.</p>
+            </div>
+          </label>
+
+          <!-- API Saída -->
+          <label class="track-option-card checked">
+            <input type="checkbox" class="custom-checkbox" id="trk_api_leave" checked>
+            <div class="option-info">
+              <h4>API - Resposta HTTP <span class="tag-scope tag-api">HTTP</span></h4>
+              <p>Registra o status code (ex: 200, 500) e corpo retornado pela requisição.</p>
+            </div>
+          </label>
+
+          <!-- Global Interaction -->
+          <label class="track-option-card checked">
+            <input type="checkbox" class="custom-checkbox" id="trk_global" checked>
+            <div class="option-info">
+              <h4>Interação Global <span class="tag-scope tag-global">Global</span></h4>
+              <p>Tracking analítico completo nas Ações Globais de Saída com histórico de estados e inputs.</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Opções Extras -->
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); display: flex; gap: 20px; flex-wrap: wrap;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer;">
+            <input type="checkbox" class="custom-checkbox" id="opt_clean_previous" checked>
+            Remover trackings gerados anteriormente (evita duplicar eventos)
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer;">
+            <input type="checkbox" class="custom-checkbox" id="opt_omit_api_payload">
+            Omitir payload de APIs (para evitar dados confidenciais nos extras)
+          </label>
+        </div>
+      </div>
+
+      <!-- Action Button & Summary -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: gap; gap: 16px;">
+          <div>
+            <div id="processStats" style="font-size: 14px; font-weight: 600; color: var(--text-main);">Aguardando arquivo do bot...</div>
+            <div style="font-size: 12px; color: var(--text-dim); margin-top: 2px;">O download do novo arquivo começará automaticamente.</div>
+          </div>
+          <button class="btn btn-primary" id="btnProcessBot" disabled onclick="processAndDownloadBot()">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Transformar & Baixar Bot
+          </button>
+        </div>
+
+        <div id="botLogContainer" style="display: none; margin-top: 16px;">
+          <pre class="json-code" id="botLogOutput"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: MENU INTERATIVO WHATSAPP -->
+    <section id="tab-menu" class="view-panel">
+      <div class="page-header">
+        <h2>📋 Gerador de Menu Interativo (WhatsApp List)</h2>
+        <p>Crie o payload JSON para mensagens interativas com lista de opções para conteúdo dinâmico no Blip.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px;">
+        <div class="card">
+          <div class="card-title">Configurações da Mensagem</div>
+          <div class="form-group">
+            <label>Título do Cabeçalho (Opcional):</label>
+            <input type="text" class="form-control" id="menuTitle" placeholder="Ex: Central de Atendimento" oninput="updateMenuPreview()">
+          </div>
+          <div class="form-group">
+            <label>Mensagem Principal / Corpo (Obrigatório):</label>
+            <textarea class="form-control" id="menuBody" rows="3" placeholder="Selecione uma das opções abaixo para prosseguir:" oninput="updateMenuPreview()">Por favor, escolha uma das opções abaixo:</textarea>
+          </div>
+          <div class="form-group">
+            <label>Texto do Rodapé (Opcional):</label>
+            <input type="text" class="form-control" id="menuFooter" placeholder="Ex: Atendimento automático 24h" oninput="updateMenuPreview()">
+          </div>
+          <div class="form-group">
+            <label>Texto do Botão de Abertura da Lista:</label>
+            <input type="text" class="form-control" id="menuButtonText" value="Ver opções" placeholder="Ex: Ver opções" oninput="updateMenuPreview()">
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 12px;">
+            <div style="font-weight: 700; font-size: 14px;">Seções e Opções do Menu</div>
+            <button class="btn btn-secondary btn-sm" onclick="addMenuSection()">+ Adicionar Seção</button>
+          </div>
+
+          <div id="menuSectionsContainer"></div>
+
+          <div style="margin-top: 20px;">
+            <button class="btn btn-primary" onclick="generateMenuJson()">Gerar JSON da Lista</button>
+          </div>
+        </div>
+
+        <div>
+          <!-- Live Preview -->
+          <div class="card">
+            <div class="card-title">Prévia da Mensagem (WhatsApp)</div>
+            <div class="whatsapp-bubble" id="whatsappMenuPreview">
+              <div class="msg-header" id="prevMenuHeader">Central de Atendimento</div>
+              <div class="msg-body" id="prevMenuBody">Por favor, escolha uma das opções abaixo:</div>
+              <div class="msg-footer" id="prevMenuFooter">Atendimento 24h</div>
+              <button class="whatsapp-btn">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <span id="prevMenuBtnText">Ver opções</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">JSON para Conteúdo Dinâmico</div>
+            <div class="code-container">
+              <button class="btn btn-secondary btn-sm copy-floating-btn" onclick="copyCode('menuGeneratedJson')">Copiar</button>
+              <pre class="json-code" id="menuGeneratedJson">// Clique em "Gerar JSON da Lista" para visualizar</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: CTA COM LINK (WHATSAPP) -->
+    <section id="tab-cta" class="view-panel">
+      <div class="page-header">
+        <h2>🔗 Gerador de Botão com Link (CTA URL)</h2>
+        <p>Gere o JSON de mensagem com botão de link direto (ex: site externo, pagamento, portal) para o WhatsApp.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div class="card">
+          <div class="card-title">Configurar Botão de Ação</div>
+          <div class="form-group">
+            <label>Mensagem:</label>
+            <textarea class="form-control" id="ctaMessage" rows="3" placeholder="Digite a mensagem que acompanha o link..." oninput="updateCtaPreview()">Acesse nosso portal exclusivo para conferir as novidades:</textarea>
+          </div>
+          <div class="form-group">
+            <label>Texto do Botão:</label>
+            <input type="text" class="form-control" id="ctaButtonText" value="Acessar Portal" placeholder="Ex: Visitar site" oninput="updateCtaPreview()">
+          </div>
+          <div class="form-group">
+            <label>URL / Link de Destino:</label>
+            <input type="url" class="form-control" id="ctaUrl" value="https://seusite.com.br" placeholder="https://..." oninput="updateCtaPreview()">
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button class="btn btn-primary" onclick="generateCtaJson()">Gerar JSON</button>
+            <button class="btn btn-secondary" onclick="resetCtaForm()">Limpar</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">Prévia da Mensagem</div>
+            <div class="whatsapp-bubble">
+              <div class="msg-body" id="prevCtaMessage">Acesse nosso portal exclusivo para conferir as novidades:</div>
+              <button class="whatsapp-btn">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                <span id="prevCtaBtnText">Acessar Portal</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">JSON Gerado</div>
+            <div class="code-container">
+              <button class="btn btn-secondary btn-sm copy-floating-btn" onclick="copyCode('ctaGeneratedJson')">Copiar</button>
+              <pre class="json-code" id="ctaGeneratedJson">// O JSON gerado aparecerá aqui</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: CONTATO DINÂMICO (VCARD) -->
+    <section id="tab-contato" class="view-panel">
+      <div class="page-header">
+        <h2>👤 Gerador de Contato do WhatsApp</h2>
+        <p>Envie cartões de contato telefônico profissionais diretamente no fluxo de conversa do WhatsApp.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div class="card">
+          <div class="card-title">Dados do Contato</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Primeiro Nome:</label>
+              <input type="text" class="form-control" id="contactFirstName" placeholder="Ex: João" oninput="updateContactPreview()">
+            </div>
+            <div class="form-group">
+              <label>Sobrenome:</label>
+              <input type="text" class="form-control" id="contactLastName" placeholder="Ex: Silva" oninput="updateContactPreview()">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Nome Formatado (Exibição):</label>
+            <input type="text" class="form-control" id="contactFormattedName" placeholder="Ex: João Silva - Suporte" oninput="updateContactPreview()">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Telefone (com DDI e DDD, ex: 5511999999999):</label>
+              <input type="text" class="form-control" id="contactPhone" placeholder="5511999999999" oninput="updateContactPreview()">
+            </div>
+            <div class="form-group">
+              <label>WhatsApp ID (apenas números):</label>
+              <input type="text" class="form-control" id="contactWaId" placeholder="5511999999999" oninput="updateContactPreview()">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button class="btn btn-primary" onclick="generateContactJson()">Gerar JSON do Contato</button>
+            <button class="btn btn-secondary" onclick="fillExampleContact()">Exemplo Rápido</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">Prévia do Card de Contato</div>
+            <div class="whatsapp-bubble">
+              <div class="contact-card-preview">
+                <div class="contact-avatar" id="prevContactAvatar">C</div>
+                <div>
+                  <div style="font-weight: 700; color: #FFF;" id="prevContactName">Nome do Contato</div>
+                  <div style="font-size: 12px; color: #8696A0;" id="prevContactPhone">+55 00 00000-0000</div>
+                </div>
+              </div>
+              <button class="whatsapp-btn">Conversar / Salvar Contato</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">JSON Gerado</div>
+            <div class="code-container">
+              <button class="btn btn-secondary btn-sm copy-floating-btn" onclick="copyCode('contactGeneratedJson')">Copiar</button>
+              <pre class="json-code" id="contactGeneratedJson">// O JSON gerado aparecerá aqui</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: HORÁRIO DE ATENDIMENTO -->
+    <section id="tab-horario" class="view-panel">
+      <div class="page-header">
+        <h2>⏱️ Configurador de Horário de Atendimento</h2>
+        <p>Defina a grade de dias e turnos de atendimento comercial para verificação em scripts no Blip Builder.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div>
+          <div class="card">
+            <div class="card-title">Adicionar Horário</div>
+            <div class="form-group">
+              <label>Dia da Semana:</label>
+              <select class="form-control" id="schedDay">
+                <option value="1">Segunda-feira</option>
+                <option value="2">Terça-feira</option>
+                <option value="3">Quarta-feira</option>
+                <option value="4">Quinta-feira</option>
+                <option value="5">Sexta-feira</option>
+                <option value="6">Sábado</option>
+                <option value="0">Domingo</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Horário Início:</label>
+                <input type="time" class="form-control" id="schedStart" value="08:00">
+              </div>
+              <div class="form-group">
+                <label>Horário Fim:</label>
+                <input type="time" class="form-control" id="schedEnd" value="18:00">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <button class="btn btn-primary" onclick="addScheduleTime()">Adicionar Turno</button>
+              <button class="btn btn-secondary" onclick="addFullWeekSchedule()">Preencher Seg-Sex (08h às 18h)</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" style="justify-content: space-between;">
+              <span>Ações Rápidas</span>
+              <button class="btn btn-danger btn-sm" onclick="clearAllSchedule()">Limpar Grade</button>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary" onclick="openImportScheduleModal()">📥 Importar JSON</button>
+              <button class="btn btn-secondary" onclick="exportScheduleJson()">📤 Exportar JSON</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">Grade Semanal Configurada</div>
+            <div id="scheduleListContainer">
+              <p style="color: var(--text-dim); font-size: 13px;">Nenhum horário cadastrado ainda.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">JSON da Grade de Atendimento</div>
+            <div class="code-container">
+              <button class="btn btn-secondary btn-sm copy-floating-btn" onclick="copyCode('scheduleGeneratedJson')">Copiar</button>
+              <pre class="json-code" id="scheduleGeneratedJson">// O JSON da grade aparecerá aqui</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Modal Importar Horário -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Importar JSON de Horários</h3>
+      <button class="modal-close" onclick="closeImportScheduleModal()">&times;</button>
+    </div>
+    <div class="form-group">
+      <label>Cole aqui o array JSON com os horários:</label>
+      <textarea class="form-control" id="importScheduleTextarea" rows="8" placeholder='[ { "num": 1, "name": "Monday", "workTime": [...] } ]'></textarea>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+      <button class="btn btn-secondary" onclick="closeImportScheduleModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="loadScheduleJson()">Carregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Feedback -->
+<div class="toast-alert" id="toastAlert">
+  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+  <span id="toastMsg">Copiado com sucesso!</span>
+</div>
+
+<script>
+  /* =========================================================================
+     1. NAVEGAÇÃO DE ABAS & TOAST
+     ========================================================================= */
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+
+      item.classList.add('active');
+      const tabId = item.getAttribute('data-tab');
+      const targetPanel = document.getElementById(tabId);
+      if (targetPanel) targetPanel.classList.add('active');
+    });
+  });
+
+  function showToast(msg = 'Copiado com sucesso!') {
+    const toast = document.getElementById('toastAlert');
+    const toastMsg = document.getElementById('toastMsg');
+    toastMsg.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2800);
+  }
+
+  function copyCode(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const text = el.textContent;
+    if (!text || text.startsWith('//')) {
+      showToast('Gere o conteúdo antes de copiar!');
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('JSON copiado para a área de transferência!');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('JSON copiado!');
+    });
+  }
+
+  /* =========================================================================
+     2. BOT TRACKING TRANSFORMER
+     ========================================================================= */
+  let currentLoadedBot = null;
+  let currentBotFileName = 'bot.json';
+
+  const botFileInput = document.getElementById('botFileInput');
+  const dropZone = document.getElementById('dropZone');
+  const uploadLabel = document.getElementById('uploadLabel');
+  const botFileStatus = document.getElementById('botFileStatus');
+  const btnProcessBot = document.getElementById('btnProcessBot');
+  const processStats = document.getElementById('processStats');
+  const botLogContainer = document.getElementById('botLogContainer');
+  const botLogOutput = document.getElementById('botLogOutput');
+
+  // Drag and Drop
+  ['dragenter', 'dragover'].forEach(name => {
+    dropZone.addEventListener(name, (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(name => {
+    dropZone.addEventListener(name, (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+    });
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files && files.length) {
+      handleBotFile(files[0]);
+    }
+  });
+
+  botFileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files.length) {
+      handleBotFile(e.target.files[0]);
+    }
+  });
+
+  async function handleBotFile(file) {
+    if (!file.name.endsWith('.json')) {
+      botFileStatus.innerHTML = `<span style="color:var(--danger)">Arquivo inválido. Selecione um JSON exportado do Blip.</span>`;
+      return;
+    }
+
+    currentBotFileName = file.name;
+    uploadLabel.textContent = `Carregando ${file.name}...`;
+    botFileStatus.textContent = 'Lendo e validando estrutura do fluxo...';
+
+    try {
+      const text = await file.text();
+      const bot = JSON.parse(text);
+
+      if (!bot.flow && !bot.globalActions) {
+        throw new Error('O JSON selecionado não aparenta ser um fluxo válido exportado do Blip (faltando chave "flow").');
+      }
+
+      currentLoadedBot = bot;
+      const totalBlocks = bot.flow ? Object.keys(bot.flow).length : 0;
+      let totalApis = 0;
+
+      if (bot.flow) {
+        Object.values(bot.flow).forEach(block => {
+          (block.$enteringCustomActions || []).forEach(a => { if (a?.type === 'ProcessHttp') totalApis++; });
+          (block.$leavingCustomActions || []).forEach(a => { if (a?.type === 'ProcessHttp') totalApis++; });
+        });
+      }
+
+      uploadLabel.innerHTML = `<strong>${file.name}</strong> carregado com sucesso!`;
+      botFileStatus.innerHTML = `<span style="color:var(--success)">✓ Fluxo válido detectado: <strong>${totalBlocks}</strong> blocos e <strong>${totalApis}</strong> chamadas de API encontradas.</span>`;
+      processStats.innerHTML = `Pronto para processar: <strong>${totalBlocks} blocos</strong> analisados.`;
+      btnProcessBot.disabled = false;
+
+    } catch (err) {
+      currentLoadedBot = null;
+      btnProcessBot.disabled = true;
+      uploadLabel.textContent = 'Erro ao ler arquivo';
+      botFileStatus.innerHTML = `<span style="color:var(--danger)">Erro: ${err.message}</span>`;
+      processStats.textContent = 'Aguardando arquivo válido...';
+    }
+  }
+
+  // Presets
+  function applyTrackingPreset(preset) {
+    document.querySelectorAll('.preset-pill').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const setChecked = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.checked = val;
+        el.closest('.track-option-card').classList.toggle('checked', val);
+      }
+    };
+
+    if (preset === 'full') {
+      ['trk_block_entry', 'trk_block_leave', 'trk_data_entering', 'trk_data_leaving', 'trk_suggestions', 'trk_api_entry', 'trk_api_leave', 'trk_global'].forEach(id => setChecked(id, true));
+    } else if (preset === 'apis') {
+      ['trk_block_entry', 'trk_block_leave', 'trk_data_entering', 'trk_data_leaving', 'trk_suggestions', 'trk_global'].forEach(id => setChecked(id, false));
+      ['trk_api_entry', 'trk_api_leave'].forEach(id => setChecked(id, true));
+    } else if (preset === 'navigation') {
+      ['trk_block_entry', 'trk_block_leave', 'trk_data_entering', 'trk_data_leaving', 'trk_suggestions', 'trk_global'].forEach(id => setChecked(id, true));
+      ['trk_api_entry', 'trk_api_leave'].forEach(id => setChecked(id, false));
+    } else if (preset === 'clear') {
+      ['trk_block_entry', 'trk_block_leave', 'trk_data_entering', 'trk_data_leaving', 'trk_suggestions', 'trk_api_entry', 'trk_api_leave', 'trk_global'].forEach(id => setChecked(id, false));
+    }
+  }
+
+  // Checkbox toggle class
+  document.querySelectorAll('.custom-checkbox').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const card = chk.closest('.track-option-card');
+      if (card) card.classList.toggle('checked', chk.checked);
+    });
+  });
+
+  // Trackers Builders
+  const createEnteringTrackingAction = (block) => ({
+    $id: crypto.randomUUID(),
+    $typeOfContent: "",
+    type: "TrackEvent",
+    $title: "Registro de eventos",
+    $invalid: false,
+    _generatedByBlipCraft: true,
+    settings: {
+      extras: {},
+      category: `${block.$title}`,
+      action: "{{contact.identity}}",
+    },
+    conditions: [],
+  });
+
+  const createLeavingTrackingAction = (block) => ({
+    $id: crypto.randomUUID(),
+    $typeOfContent: "",
+    type: "TrackEvent",
+    $title: "Registro de eventos",
+    $invalid: false,
+    _generatedByBlipCraft: true,
+    settings: {
+      extras: {},
+      category: `${block.$title} Conteudo`,
+      action: "{{contact.identity}} | {{input.content}}",
+    },
+    conditions: [
+      {
+        values: [],
+        source: "input",
+        comparison: "exists",
+      },
+    ],
+  });
+
+  const createDataEnteringTrackingAction = (block) => ({
+    $id: crypto.randomUUID(),
+    $typeOfContent: "",
+    type: "TrackEvent",
+    $title: "Registro de eventos Data",
+    $invalid: false,
+    _generatedByBlipCraft: true,
+    settings: {
+      extras: {},
+      category: "exibicao|{{state.name}}",
+      action: "exibicao",
+    },
+    conditions: [],
+  });
+
+  const createDataLeavingTrackingAction = (block) => ({
+    $id: crypto.randomUUID(),
+    $typeOfContent: "",
+    type: "TrackEvent",
+    $title: "Registro de eventos Data",
+    $invalid: false,
+    _generatedByBlipCraft: true,
+    settings: {
+      extras: { input: "{{input.content}}" },
+      category: "input|{{state.name}}",
+      action: "input",
+    },
+    conditions: [
+      {
+        values: [],
+        source: "input",
+        comparison: "exists",
+        $$hashKey: "object:3606",
+      },
+    ],
+  });
+
+  const createInputTrackingActionsFromSuggestions = (suggestions) => {
+    const switchCases = suggestions
+      .map((suggestion) =>
+        `            case userInput.includes(${JSON.stringify(suggestion)}):\n                return ${JSON.stringify(suggestion)};`
+      )
+      .join("\n");
+
+    const scriptSource = `
+function run(userInput) {
+    try {
+        if (!userInput) return 'N/A';
+        switch (true) {
+${switchCases}
+            default:
+                return 'N/A';
+        }
+    } catch (e) {
+        return 'N/A';
+    }
+}
+`;
+
+    const executeScriptAction = {
+      $id: crypto.randomUUID(),
+      $typeOfContent: "",
+      type: "ExecuteScript",
+      $title: "treat input",
+      $invalid: false,
+      _generatedByBlipCraft: true,
+      settings: {
+        function: "run",
+        source: scriptSource,
+        inputVariables: ["input.content"],
+        outputVariable: "inputFormated",
+        LocalTimeZoneEnabled: false,
+      },
+      conditions: [],
+    };
+
+    const trackingSelecaoAction = {
+      $id: crypto.randomUUID(),
+      $typeOfContent: "",
+      type: "TrackEvent",
+      $title: "Registro de eventos Data",
+      $invalid: false,
+      _generatedByBlipCraft: true,
+      settings: {
+        extras: { input: "{{inputFormated}}" },
+        category: "input|{{state.name}}",
+        action: "selecao",
+      },
+      conditions: [
+        {
+          source: "context",
+          comparison: "notEquals",
+          variable: "inputFormated",
+          values: ["N/A"],
+        },
+        { source: "input", comparison: "exists", values: [] },
+      ],
+    };
+
+    const trackingInesperadoAction = {
+      $id: crypto.randomUUID(),
+      $typeOfContent: "",
+      type: "TrackEvent",
+      $title: "Registro de eventos Data",
+      $invalid: false,
+      _generatedByBlipCraft: true,
+      settings: {
+        extras: { input: "{{input.content}}" },
+        category: "input|{{state.name}}",
+        action: "inesperado",
+      },
+      conditions: [
+        {
+          source: "context",
+          comparison: "equals",
+          variable: "inputFormated",
+          values: ["N/A"],
+        },
+        { source: "input", comparison: "exists", values: [] },
+      ],
+    };
+
+    return [executeScriptAction, trackingSelecaoAction, trackingInesperadoAction];
+  };
+
+  function normalizeApiName(name) {
+    return String(name || "chamada_api")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .replace(/_+/g, "_");
+  }
+
+  function getApiPayload(processHttpAction) {
+    const settings = processHttpAction?.settings || {};
+    if (settings.body) {
+      if (typeof settings.body === "string") return settings.body;
+      try {
+        return JSON.stringify(settings.body);
+      } catch (e) {
+        return "{}";
+      }
+    }
+    return "{}";
+  }
+
+  function createApiCallIdVariableAction(variableName) {
+    return {
+      $id: crypto.randomUUID(),
+      $typeOfContent: "",
+      $description: "",
+      $inputSchema: { type: "object", properties: {}, required: [] },
+      type: "SetVariable",
+      $title: "Definir variável id chamada API",
+      $invalid: false,
+      _generatedByBlipCraft: true,
+      settings: {
+        variable: variableName,
+        value: "{{random.guid}}"
+      },
+      conditions: []
+    };
+  }
+
+  function createApiTrackingAction(processHttpAction, idVariableName, type, omitPayload = false) {
+    const settings = processHttpAction.settings || {};
+    const method = settings.method || "";
+    const url = settings.uri || "";
+    const name = normalizeApiName(processHttpAction.$title);
+    const payload = omitPayload ? "[OMITIDO]" : getApiPayload(processHttpAction);
+    const statusVariable = settings.responseStatusVariable || "";
+    const responseVariable = settings.responseBodyVariable || "";
+
+    const extras = {
+      bot: "{{config.botId}}",
+      bloco: "{{state.name}}",
+      id_chamada: `{{${idVariableName}}}`,
+      metodo: String(method).toUpperCase(),
+      nome: name,
+      url: url,
+      payload: payload
+    };
+
+    if (type === "saida") {
+      extras.http_response = statusVariable ? `{{${statusVariable}}}` : "";
+      extras.response = responseVariable ? (omitPayload ? "[OMITIDO]" : `{{${responseVariable}}}`) : "";
+    }
+
+    return {
+      $id: crypto.randomUUID(),
+      $typeOfContent: "",
+      $description: "",
+      $inputSchema: { type: "object", properties: {}, required: [] },
+      type: "TrackEvent",
+      $title: `Tracking API - ${type} - ${name}`,
+      $invalid: false,
+      _generatedByBlipCraft: true,
+      settings: {
+        extras,
+        category: "chamada_api",
+        action: type
+      },
+      conditions: []
+    };
+  }
+
+  function createGlobalTrackingAction() {
+    return {
+      $id: crypto.randomUUID(),
+      $typeOfContent: "",
+      type: "TrackEvent",
+      $title: "Registro de eventos",
+      $invalid: false,
+      _generatedByBlipCraft: true,
+      settings: {
+        extras: {
+          state: "{{state.name}}",
+          lastState: "{{state.previous.name}}",
+          identity: "{{contact.identity}}",
+          input: "{{input.content}}",
+          date: "{{calendar.datetime}}",
+          source: "{{contact.source}}",
+          messageId: "{{input.message.id}}",
+          stateId: "{{state.id}}",
+          lastStateId: "{{state.previous.id}}",
+        },
+        category: "Interacao",
+        action: "Exibicao",
+      },
+      conditions: [],
+    };
+  }
+
+  function cleanPreviousBlipCraftTrackings(bot) {
+    if (!bot?.flow) return;
+    const isOurTracking = (a) => a?._generatedByBlipCraft || (a?.$title && (a.$title.startsWith("Tracking API -") || a.$title === "Registro de eventos Data" || a.$title === "treat input"));
+
+    Object.values(bot.flow).forEach(block => {
+      if (Array.isArray(block.$enteringCustomActions)) {
+        block.$enteringCustomActions = block.$enteringCustomActions.filter(a => !isOurTracking(a));
+      }
+      if (Array.isArray(block.$leavingCustomActions)) {
+        block.$leavingCustomActions = block.$leavingCustomActions.filter(a => !isOurTracking(a));
+      }
+    });
+
+    if (bot.globalActions?.$leavingCustomActions && Array.isArray(bot.globalActions.$leavingCustomActions)) {
+      bot.globalActions.$leavingCustomActions = bot.globalActions.$leavingCustomActions.filter(a => !isOurTracking(a));
+    }
+  }
+
+  function processAndDownloadBot() {
+    if (!currentLoadedBot) return;
+
+    btnProcessBot.disabled = true;
+    processStats.textContent = 'Processando e injetando eventos selecionados...';
+
+    try {
+      // Deep clone bot
+      const bot = JSON.parse(JSON.stringify(currentLoadedBot));
+
+      const optClean = document.getElementById('opt_clean_previous').checked;
+      const optOmitPayload = document.getElementById('opt_omit_api_payload').checked;
+
+      const trkBlockEntry = document.getElementById('trk_block_entry').checked;
+      const trkBlockLeave = document.getElementById('trk_block_leave').checked;
+      const trkDataEntering = document.getElementById('trk_data_entering').checked;
+      const trkDataLeaving = document.getElementById('trk_data_leaving').checked;
+      const trkSuggestions = document.getElementById('trk_suggestions').checked;
+      const trkApiEntry = document.getElementById('trk_api_entry').checked;
+      const trkApiLeave = document.getElementById('trk_api_leave').checked;
+      const trkGlobal = document.getElementById('trk_global').checked;
+
+      if (optClean) {
+        cleanPreviousBlipCraftTrackings(bot);
+      }
+
+      let injectedCount = 0;
+      let apisProcessed = 0;
+
+      if (bot.flow) {
+        Object.values(bot.flow).forEach(block => {
+          if (!block.$enteringCustomActions) block.$enteringCustomActions = [];
+          if (!block.$leavingCustomActions) block.$leavingCustomActions = [];
+
+          // 1. Entrada de Bloco
+          if (trkBlockEntry) {
+            block.$enteringCustomActions.push(createEnteringTrackingAction(block));
+            injectedCount++;
+          }
+
+          // 2. Data Entering (SendMessage)
+          if (trkDataEntering) {
+            const hasSendMessage = block.$contentActions?.some(ca => ca.action?.type === "SendMessage");
+            if (hasSendMessage) {
+              block.$enteringCustomActions.push(createDataEnteringTrackingAction(block));
+              injectedCount++;
+            }
+          }
+
+          // 3. Saída de Bloco & Data Leaving
+          const needsLeavingTracking = block.$contentActions?.some(
+            action => action.input?.bypass === false && !action.$leavingCustomActions
+          );
+
+          if (needsLeavingTracking) {
+            if (trkBlockLeave) {
+              block.$leavingCustomActions.push(createLeavingTrackingAction(block));
+              injectedCount++;
+            }
+            if (trkDataLeaving) {
+              block.$leavingCustomActions.push(createDataLeavingTrackingAction(block));
+              injectedCount++;
+            }
+
+            // 4. Suggestions
+            if (trkSuggestions && Array.isArray(block.$inputSuggestions) && block.$inputSuggestions.length > 0) {
+              const suggActions = createInputTrackingActionsFromSuggestions(block.$inputSuggestions);
+              block.$leavingCustomActions.push(...suggActions);
+              injectedCount += suggActions.length;
+            }
+          }
+
+          // 5. APIs (Entrada e Saída)
+          const processApiList = (actions, scope) => {
+            const updated = [];
+            let idx = 1;
+            actions.forEach(act => {
+              if (act?.type !== "ProcessHttp") {
+                updated.push(act);
+                return;
+              }
+              apisProcessed++;
+              const idVar = `idChamadaApi${scope}${idx++}`;
+
+              if (trkApiEntry) {
+                updated.push(createApiCallIdVariableAction(idVar));
+                updated.push(createApiTrackingAction(act, idVar, "entrada", optOmitPayload));
+                injectedCount += 2;
+              }
+
+              updated.push(act);
+
+              if (trkApiLeave) {
+                updated.push(createApiTrackingAction(act, idVar, "saida", optOmitPayload));
+                injectedCount++;
+              }
+            });
+            return updated;
+          };
+
+          if (trkApiEntry || trkApiLeave) {
+            block.$enteringCustomActions = processApiList(block.$enteringCustomActions, "Entrada");
+            block.$leavingCustomActions = processApiList(block.$leavingCustomActions, "Saida");
+          }
+        });
+      }
+
+      // 6. Global Action
+      if (trkGlobal && bot.globalActions?.$leavingCustomActions && Array.isArray(bot.globalActions.$leavingCustomActions)) {
+        bot.globalActions.$leavingCustomActions.push(createGlobalTrackingAction());
+        injectedCount++;
+      }
+
+      // Baixar resultado
+      const outputName = currentBotFileName.replace(/\.json$/i, '') + '.trackings.json';
+      const blob = new Blob([JSON.stringify(bot, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = outputName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      // Resumo
+      const report = {
+        status: "Sucesso!",
+        arquivoGerado: outputName,
+        totalAcoesInjetadas: injectedCount,
+        apisProcessadas: apisProcessed,
+        blocosNoFluxo: bot.flow ? Object.keys(bot.flow).length : 0,
+        trackingsAtivados: {
+          blocoEntrada: trkBlockEntry,
+          blocoSaida: trkBlockLeave,
+          dataExibicao: trkDataEntering,
+          dataInput: trkDataLeaving,
+          validacaoSugestoes: trkSuggestions,
+          apiEntrada: trkApiEntry,
+          apiSaida: trkApiLeave,
+          global: trkGlobal
+        }
+      };
+
+      botLogContainer.style.display = 'block';
+      botLogOutput.textContent = JSON.stringify(report, null, 2);
+      processStats.innerHTML = `<span style="color:var(--success)">✓ Transformação concluída! <strong>${injectedCount}</strong> trackings injetados. Arquivo baixado.</span>`;
+      showToast('Download do bot com trackings iniciado!');
+
+    } catch (err) {
+      processStats.innerHTML = `<span style="color:var(--danger)">Erro ao processar: ${err.message}</span>`;
+      botLogContainer.style.display = 'block';
+      botLogOutput.textContent = String(err.stack || err);
+    } finally {
+      btnProcessBot.disabled = false;
+    }
+  }
+
+  /* =========================================================================
+     3. MENU INTERATIVO WHATSAPP (LIST MESSAGE)
+     ========================================================================= */
+  let menuSections = [
+    {
+      title: "Serviços Principais",
+      options: [
+        { title: "Falar com Suporte", description: "Dúvidas técnicas e atendimento" },
+        { title: "Segunda Via Boleto", description: "Emitir código de barras ou PDF" }
+      ]
+    }
+  ];
+
+  function renderMenuSections() {
+    const container = document.getElementById('menuSectionsContainer');
+    container.innerHTML = '';
+
+    menuSections.forEach((sec, sIdx) => {
+      const secDiv = document.createElement('div');
+      secDiv.className = 'schedule-day-group';
+      secDiv.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <input type="text" class="form-control" style="font-weight:700; width:65%;" value="${sec.title}" 
+            placeholder="Título da Seção (ex: Atendimento)" oninput="menuSections[${sIdx}].title = this.value; generateMenuJson();">
+          <button class="btn btn-danger btn-sm" onclick="removeMenuSection(${sIdx})">Remover Seção</button>
+        </div>
+        <div id="secOptionsContainer_${sIdx}" style="display:flex; flex-direction:column; gap:8px;">
+          ${sec.options.map((opt, oIdx) => `
+            <div style="display:grid; grid-template-columns: 1fr 1.5fr auto; gap:8px; align-items:center; background:#0F172A; padding:8px; border-radius:6px;">
+              <input type="text" class="form-control" style="font-size:12px;" value="${opt.title}" placeholder="Título (max 24 chars)" 
+                oninput="menuSections[${sIdx}].options[${oIdx}].title = this.value; generateMenuJson();">
+              <input type="text" class="form-control" style="font-size:12px;" value="${opt.description}" placeholder="Descrição (max 72 chars)" 
+                oninput="menuSections[${sIdx}].options[${oIdx}].description = this.value; generateMenuJson();">
+              <span class="schedule-remove-btn" onclick="removeMenuOption(${sIdx}, ${oIdx})">&times;</span>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="addMenuOption(${sIdx})">+ Adicionar Opção</button>
+      `;
+      container.appendChild(secDiv);
+    });
+  }
+
+  function addMenuSection() {
+    menuSections.push({ title: "Nova Seção", options: [{ title: "Opção", description: "Descrição" }] });
+    renderMenuSections();
+    generateMenuJson();
+  }
+
+  function removeMenuSection(sIdx) {
+    menuSections.splice(sIdx, 1);
+    renderMenuSections();
+    generateMenuJson();
+  }
+
+  function addMenuOption(sIdx) {
+    menuSections[sIdx].options.push({ title: "Nova Opção", description: "Detalhes da opção" });
+    renderMenuSections();
+    generateMenuJson();
+  }
+
+  function removeMenuOption(sIdx, oIdx) {
+    menuSections[sIdx].options.splice(oIdx, 1);
+    renderMenuSections();
+    generateMenuJson();
+  }
+
+  function updateMenuPreview() {
+    const title = document.getElementById('menuTitle').value.trim();
+    const body = document.getElementById('menuBody').value.trim();
+    const footer = document.getElementById('menuFooter').value.trim();
+    const btn = document.getElementById('menuButtonText').value.trim();
+
+    const pHeader = document.getElementById('prevMenuHeader');
+    const pBody = document.getElementById('prevMenuBody');
+    const pFooter = document.getElementById('prevMenuFooter');
+    const pBtn = document.getElementById('prevMenuBtnText');
+
+    if (title) {
+      pHeader.style.display = 'block';
+      pHeader.textContent = title;
+    } else {
+      pHeader.style.display = 'none';
+    }
+
+    pBody.textContent = body || "Selecione uma opção:";
+    
+    if (footer) {
+      pFooter.style.display = 'block';
+      pFooter.textContent = footer;
+    } else {
+      pFooter.style.display = 'none';
+    }
+
+    pBtn.textContent = btn || "Ver opções";
+  }
+
+  function generateMenuJson() {
+    updateMenuPreview();
+
+    const title = document.getElementById('menuTitle').value.trim();
+    const body = document.getElementById('menuBody').value.trim() || "Por favor, escolha uma das opções abaixo:";
+    const footer = document.getElementById('menuFooter').value.trim();
+    const btnText = document.getElementById('menuButtonText').value.trim() || "Ver opções";
+
+    const sections = menuSections.map(sec => ({
+      title: sec.title || "Opções",
+      rows: sec.options.map(opt => ({
+        id: (opt.title || "item").toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 15) + '_' + Math.floor(Math.random()*100),
+        title: opt.title || "Opção",
+        description: opt.description || ""
+      }))
+    }));
+
+    const json = {
+      recipient_type: "individual",
+      type: "interactive",
+      interactive: {
+        type: "list",
+        body: { text: body },
+        action: {
+          button: btnText,
+          sections: sections
+        }
+      }
+    };
+
+    if (title) json.interactive.header = { type: "text", text: title };
+    if (footer) json.interactive.footer = { text: footer };
+
+    document.getElementById('menuGeneratedJson').textContent = JSON.stringify(json, null, 2);
+  }
+
+  /* =========================================================================
+     4. CTA COM LINK (WHATSAPP)
+     ========================================================================= */
+  function updateCtaPreview() {
+    const msg = document.getElementById('ctaMessage').value || "Mensagem...";
+    const btn = document.getElementById('ctaButtonText').value || "Acessar Link";
+    document.getElementById('prevCtaMessage').textContent = msg;
+    document.getElementById('prevCtaBtnText').textContent = btn;
+  }
+
+  function generateCtaJson() {
+    updateCtaPreview();
+    const message = document.getElementById('ctaMessage').value;
+    const buttonText = document.getElementById('ctaButtonText').value;
+    const url = document.getElementById('ctaUrl').value;
+
+    const json = {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      type: "interactive",
+      interactive: {
+        type: "cta_url",
+        body: { text: message },
+        action: {
+          name: "cta_url",
+          parameters: {
+            display_text: buttonText,
+            url: url
+          }
+        }
+      }
+    };
+
+    document.getElementById('ctaGeneratedJson').textContent = JSON.stringify(json, null, 2);
+    showToast('JSON do CTA gerado!');
+  }
+
+  function resetCtaForm() {
+    document.getElementById('ctaMessage').value = '';
+    document.getElementById('ctaButtonText').value = '';
+    document.getElementById('ctaUrl').value = '';
+    updateCtaPreview();
+    document.getElementById('ctaGeneratedJson').textContent = '// Formulário limpo';
+  }
+
+  /* =========================================================================
+     5. CONTATO WHATSAPP (VCARD)
+     ========================================================================= */
+  function updateContactPreview() {
+    const fn = document.getElementById('contactFirstName').value.trim();
+    const ln = document.getElementById('contactLastName').value.trim();
+    const formatted = document.getElementById('contactFormattedName').value.trim();
+    const phone = document.getElementById('contactPhone').value.trim();
+
+    const name = formatted || `${fn} ${ln}`.trim() || "Nome do Contato";
+    document.getElementById('prevContactName').textContent = name;
+    document.getElementById('prevContactPhone').textContent = phone ? `+${phone}` : "+55 00 00000-0000";
+    document.getElementById('prevContactAvatar').textContent = name.charAt(0).toUpperCase() || "C";
+  }
+
+  function fillExampleContact() {
+    document.getElementById('contactFirstName').value = "Suporte";
+    document.getElementById('contactLastName').value = "Técnico";
+    document.getElementById('contactFormattedName').value = "Suporte Técnico - Empresa";
+    document.getElementById('contactPhone').value = "5511999998888";
+    document.getElementById('contactWaId').value = "5511999998888";
+    updateContactPreview();
+    generateContactJson();
+  }
+
+  function generateContactJson() {
+    updateContactPreview();
+    const fn = document.getElementById('contactFirstName').value.trim();
+    const ln = document.getElementById('contactLastName').value.trim();
+    const formatted = document.getElementById('contactFormattedName').value.trim() || `${fn} ${ln}`.trim();
+    const rawPhone = document.getElementById('contactPhone').value.replace(/\D/g, '');
+    const waId = document.getElementById('contactWaId').value.replace(/\D/g, '') || rawPhone;
+
+    const json = {
+      type: "contacts",
+      contacts: [
+        {
+          name: {
+            first_name: fn,
+            formatted_name: formatted,
+            last_name: ln
+          },
+          phones: [
+            {
+              phone: `+${rawPhone}`,
+              type: "WORK",
+              wa_id: waId
+            }
+          ]
+        }
+      ]
+    };
+
+    document.getElementById('contactGeneratedJson').textContent = JSON.stringify(json, null, 2);
+    showToast('JSON do Contato gerado!');
+  }
+
+  /* =========================================================================
+     6. HORÁRIO DE ATENDIMENTO
+     ========================================================================= */
+  let scheduleData = [
+    { num: 1, name: "Monday", portugueseName: "Segunda-feira", workTime: [{ start: "08:00", end: "18:00" }] },
+    { num: 2, name: "Tuesday", portugueseName: "Terça-feira", workTime: [{ start: "08:00", end: "18:00" }] },
+    { num: 3, name: "Wednesday", portugueseName: "Quarta-feira", workTime: [{ start: "08:00", end: "18:00" }] },
+    { num: 4, name: "Thursday", portugueseName: "Quinta-feira", workTime: [{ start: "08:00", end: "18:00" }] },
+    { num: 5, name: "Friday", portugueseName: "Sexta-feira", workTime: [{ start: "08:00", end: "18:00" }] }
+  ];
+
+  const daysPtMap = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  const daysEnMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  function renderSchedule() {
+    const container = document.getElementById('scheduleListContainer');
+    if (!scheduleData.length) {
+      container.innerHTML = '<p style="color:var(--text-dim); font-size:13px;">Nenhum horário cadastrado ainda.</p>';
+      document.getElementById('scheduleGeneratedJson').textContent = '[]';
+      return;
+    }
+
+    container.innerHTML = scheduleData.map((d, dIdx) => `
+      <div class="schedule-day-group">
+        <div class="schedule-day-header">
+          <span>${d.portugueseName} <small style="color:var(--text-dim);">(${d.name})</small></span>
+          <button class="btn btn-danger btn-sm" onclick="removeScheduleDay(${dIdx})">Remover Dia</button>
+        </div>
+        <div>
+          ${d.workTime.map((t, tIdx) => `
+            <div class="schedule-time-pill">
+              <span>🕒 ${t.start} às ${t.end}</span>
+              <span class="schedule-remove-btn" onclick="removeScheduleTurn(${dIdx}, ${tIdx})">&times;</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('scheduleGeneratedJson').textContent = JSON.stringify(scheduleData, null, 2);
+  }
+
+  function addScheduleTime() {
+    const day = parseInt(document.getElementById('schedDay').value);
+    const start = document.getElementById('schedStart').value;
+    const end = document.getElementById('schedEnd').value;
+
+    if (!start || !end) {
+      alert('Selecione os horários de início e fim.');
+      return;
+    }
+
+    let existing = scheduleData.find(s => s.num === day);
+    if (!existing) {
+      existing = {
+        num: day,
+        name: daysEnMap[day],
+        portugueseName: daysPtMap[day],
+        workTime: []
+      };
+      scheduleData.push(existing);
+    }
+
+    existing.workTime.push({ start, end });
+    existing.workTime.sort((a, b) => a.start.localeCompare(b.start));
+    scheduleData.sort((a, b) => a.num - b.num);
+
+    renderSchedule();
+    showToast('Horário adicionado!');
+  }
+
+  function addFullWeekSchedule() {
+    scheduleData = [1, 2, 3, 4, 5].map(day => ({
+      num: day,
+      name: daysEnMap[day],
+      portugueseName: daysPtMap[day],
+      workTime: [{ start: "08:00", end: "18:00" }]
+    }));
+    renderSchedule();
+    showToast('Semana preenchida (Seg-Sex, 08h-18h)!');
+  }
+
+  function removeScheduleTurn(dIdx, tIdx) {
+    scheduleData[dIdx].workTime.splice(tIdx, 1);
+    if (scheduleData[dIdx].workTime.length === 0) {
+      scheduleData.splice(dIdx, 1);
+    }
+    renderSchedule();
+  }
+
+  function removeScheduleDay(dIdx) {
+    scheduleData.splice(dIdx, 1);
+    renderSchedule();
+  }
+
+  function clearAllSchedule() {
+    if (confirm('Tem certeza que deseja apagar todos os horários?')) {
+      scheduleData = [];
+      renderSchedule();
+    }
+  }
+
+  function exportScheduleJson() {
+    const jsonStr = JSON.stringify(scheduleData, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "horario_atendimento.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Arquivo baixado!');
+  }
+
+  function openImportScheduleModal() {
+    document.getElementById('importScheduleTextarea').value = '';
+    document.getElementById('importModal').classList.add('active');
+  }
+
+  function closeImportScheduleModal() {
+    document.getElementById('importModal').classList.remove('active');
+  }
+
+  function loadScheduleJson() {
+    const raw = document.getElementById('importScheduleTextarea').value.trim();
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) throw new Error('O JSON deve ser uma lista (array) de horários.');
+      scheduleData = parsed;
+      renderSchedule();
+      closeImportScheduleModal();
+      showToast('Horários importados com sucesso!');
+    } catch (e) {
+      alert('Erro ao importar JSON: ' + e.message);
+    }
+  }
+
+  // Inicializações
+  window.addEventListener('DOMContentLoaded', () => {
+    renderMenuSections();
+    generateMenuJson();
+    generateCtaJson();
+    renderSchedule();
+  });
+</script>
+
+</body>
+</html>
