@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BlipHub Helper - Ferramentas & Injetor de Trackings</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2300A3FF'/%3E%3Cpath d='M54 16 L26 54 L48 54 L44 84 L74 46 L52 46 Z' fill='%23FFFFFF'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -929,6 +930,13 @@
             <button class="btn btn-secondary btn-sm" onclick="addMenuSection()">+ Adicionar Seção</button>
           </div>
 
+          <div id="duplicateIdWarning" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 14px; font-size: 13px; color: #FCA5A5;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <span>⚠️ <strong>Atenção:</strong> IDs duplicados detectados. O WhatsApp rejeita menus com IDs repetidos!</span>
+              <button class="btn btn-secondary btn-sm" onclick="autoFixDuplicateIds()">🪄 Tornar IDs Únicos</button>
+            </div>
+          </div>
+
           <div id="menuSectionsContainer"></div>
 
           <div style="margin-top: 20px;">
@@ -1804,15 +1812,69 @@ ${switchCases}
     {
       title: "Serviços Principais",
       options: [
-        { title: "Falar com Suporte", description: "Dúvidas técnicas e atendimento" },
-        { title: "Segunda Via Boleto", description: "Emitir código de barras ou PDF" }
+        { id: "falar_com_suporte", title: "Falar com Suporte", description: "Dúvidas técnicas e atendimento" },
+        { id: "segunda_via_boleto", title: "Segunda Via Boleto", description: "Emitir código de barras ou PDF" }
       ]
     }
   ];
 
+  function sanitizeOptionId(raw) {
+    return (raw || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9_-]/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .substring(0, 100);
+  }
+
+  function getDuplicateIds() {
+    const counts = {};
+    menuSections.forEach(sec => {
+      sec.options.forEach(opt => {
+        const id = sanitizeOptionId(opt.id || opt.title || "");
+        if (id) {
+          counts[id] = (counts[id] || 0) + 1;
+        }
+      });
+    });
+    const dupes = new Set();
+    for (const [id, count] of Object.entries(counts)) {
+      if (count > 1) dupes.add(id);
+    }
+    return dupes;
+  }
+
+  function autoFixDuplicateIds() {
+    const seen = new Set();
+    menuSections.forEach(sec => {
+      sec.options.forEach(opt => {
+        let base = sanitizeOptionId(opt.id || opt.title || "opcao");
+        if (!base) base = "opcao";
+        let unique = base;
+        let counter = 2;
+        while (seen.has(unique)) {
+          unique = `${base}_${counter++}`;
+        }
+        seen.add(unique);
+        opt.id = unique;
+      });
+    });
+    renderMenuSections();
+    generateMenuJson();
+    showToast("IDs corrigidos! Todos os IDs agora são únicos.");
+  }
+
   function renderMenuSections() {
     const container = document.getElementById('menuSectionsContainer');
     container.innerHTML = '';
+    const dupes = getDuplicateIds();
+
+    const warningBanner = document.getElementById('duplicateIdWarning');
+    if (warningBanner) {
+      warningBanner.style.display = dupes.size > 0 ? 'block' : 'none';
+    }
 
     menuSections.forEach((sec, sIdx) => {
       const secDiv = document.createElement('div');
@@ -1823,16 +1885,33 @@ ${switchCases}
             placeholder="Título da Seção (ex: Atendimento)" oninput="menuSections[${sIdx}].title = this.value; generateMenuJson();">
           <button class="btn btn-danger btn-sm" onclick="removeMenuSection(${sIdx})">Remover Seção</button>
         </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; font-size:11px; font-weight:700; color:var(--text-dim); text-transform:uppercase; padding:0 4px 6px;">
+          <span>ID (Único)</span>
+          <span>Título (Max 24)</span>
+          <span>Descrição (Max 72)</span>
+          <span></span>
+        </div>
+
         <div id="secOptionsContainer_${sIdx}" style="display:flex; flex-direction:column; gap:8px;">
-          ${sec.options.map((opt, oIdx) => `
-            <div style="display:grid; grid-template-columns: 1fr 1.5fr auto; gap:8px; align-items:center; background:#0F172A; padding:8px; border-radius:6px;">
-              <input type="text" class="form-control" style="font-size:12px;" value="${opt.title}" placeholder="Título (max 24 chars)" 
-                oninput="menuSections[${sIdx}].options[${oIdx}].title = this.value; generateMenuJson();">
-              <input type="text" class="form-control" style="font-size:12px;" value="${opt.description}" placeholder="Descrição (max 72 chars)" 
+          ${sec.options.map((opt, oIdx) => {
+            const currentIdClean = sanitizeOptionId(opt.id || opt.title || "");
+            const isDupe = dupes.has(currentIdClean);
+            const borderStyle = isDupe ? "border-color: var(--danger); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);" : "";
+
+            return `
+            <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; align-items:center; background:#0F172A; padding:8px; border-radius:6px;">
+              <input type="text" class="form-control" style="font-size:12px; font-family:'JetBrains Mono', monospace; ${borderStyle}" 
+                value="${opt.id || ''}" placeholder="id_opcao" title="${isDupe ? 'Atenção: Este ID está duplicado!' : 'ID único da opção'}"
+                oninput="onOptionIdInput(${sIdx}, ${oIdx}, this.value)">
+              <input type="text" class="form-control" style="font-size:12px;" value="${opt.title}" placeholder="Título" maxlength="24"
+                oninput="onOptionTitleInput(${sIdx}, ${oIdx}, this.value)">
+              <input type="text" class="form-control" style="font-size:12px;" value="${opt.description}" placeholder="Descrição" maxlength="72"
                 oninput="menuSections[${sIdx}].options[${oIdx}].description = this.value; generateMenuJson();">
-              <span class="schedule-remove-btn" onclick="removeMenuOption(${sIdx}, ${oIdx})">&times;</span>
+              <span class="schedule-remove-btn" title="Remover opção" onclick="removeMenuOption(${sIdx}, ${oIdx})">&times;</span>
             </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
         <button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="addMenuOption(${sIdx})">+ Adicionar Opção</button>
       `;
@@ -1840,8 +1919,29 @@ ${switchCases}
     });
   }
 
+  function onOptionIdInput(sIdx, oIdx, val) {
+    menuSections[sIdx].options[oIdx].id = sanitizeOptionId(val);
+    menuSections[sIdx].options[oIdx]._manualId = true;
+    renderMenuSections();
+    generateMenuJson();
+  }
+
+  function onOptionTitleInput(sIdx, oIdx, val) {
+    menuSections[sIdx].options[oIdx].title = val;
+    // Se o usuário ainda não digitou um ID customizado manualmente, sincroniza um ID seguro
+    if (!menuSections[sIdx].options[oIdx]._manualId && !menuSections[sIdx].options[oIdx].id) {
+      menuSections[sIdx].options[oIdx].id = sanitizeOptionId(val);
+    }
+    renderMenuSections();
+    generateMenuJson();
+  }
+
   function addMenuSection() {
-    menuSections.push({ title: "Nova Seção", options: [{ title: "Opção", description: "Descrição" }] });
+    const secNum = menuSections.length + 1;
+    menuSections.push({
+      title: `Seção ${secNum}`,
+      options: [{ id: `opcao_${secNum}_1`, title: "Nova Opção", description: "Descrição" }]
+    });
     renderMenuSections();
     generateMenuJson();
   }
@@ -1853,7 +1953,13 @@ ${switchCases}
   }
 
   function addMenuOption(sIdx) {
-    menuSections[sIdx].options.push({ title: "Nova Opção", description: "Detalhes da opção" });
+    const optNum = menuSections[sIdx].options.length + 1;
+    let baseId = `opcao_${sIdx + 1}_${optNum}`;
+    const dupes = getDuplicateIds();
+    while (dupes.has(baseId)) {
+      baseId += `_${Math.floor(Math.random() * 10)}`;
+    }
+    menuSections[sIdx].options.push({ id: baseId, title: "Nova Opção", description: "Detalhes da opção" });
     renderMenuSections();
     generateMenuJson();
   }
@@ -1902,14 +2008,40 @@ ${switchCases}
     const footer = document.getElementById('menuFooter').value.trim();
     const btnText = document.getElementById('menuButtonText').value.trim() || "Ver opções";
 
-    const sections = menuSections.map(sec => ({
+    const seenIds = new Set();
+    let hadDuplication = false;
+
+    const sections = menuSections.map((sec, sIdx) => ({
       title: sec.title || "Opções",
-      rows: sec.options.map(opt => ({
-        id: (opt.title || "item").toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 15) + '_' + Math.floor(Math.random()*100),
-        title: opt.title || "Opção",
-        description: opt.description || ""
-      }))
+      rows: sec.options.map((opt, oIdx) => {
+        let cleanId = sanitizeOptionId(opt.id || opt.title || "opcao");
+        if (!cleanId) cleanId = `opcao_${sIdx + 1}_${oIdx + 1}`;
+
+        let finalId = cleanId;
+        let counter = 2;
+        while (seenIds.has(finalId)) {
+          hadDuplication = true;
+          finalId = `${cleanId}_${counter++}`;
+        }
+        seenIds.add(finalId);
+
+        // Se houve correção automática de duplicata, atualiza o id original
+        if (finalId !== opt.id) {
+          opt.id = finalId;
+        }
+
+        return {
+          id: finalId,
+          title: opt.title || "Opção",
+          description: opt.description || ""
+        };
+      })
     }));
+
+    if (hadDuplication) {
+      // Re-renderiza de forma sutil para atualizar os inputs se foram alterados
+      setTimeout(() => renderMenuSections(), 50);
+    }
 
     const json = {
       recipient_type: "individual",
