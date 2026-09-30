@@ -1,4 +1,4 @@
-# ⚡ BlipCraft Studio
+# ⚡ BlipHub Helper
 
 Uma suíte de ferramentas para desenvolvedores da plataforma **Blip (Take Blip)**. Permite injetar eventos analíticos (trackings) customizáveis em bots exportados e gerar payloads interativos para WhatsApp de forma 100% client-side (no próprio navegador, sem envio de dados para servidores externos).
 
@@ -55,7 +55,7 @@ Para disponibilizar a página online gratuitamente:
    ```bash
    git init
    git add .
-   git commit -m "feat: inicializa BlipCraft Studio"
+   git commit -m "feat: inicializa BlipHub Helper"
    ```
 
 2. **Crie um repositório no seu GitHub** e conecte o repositório local:
@@ -81,3 +81,4 @@ Em poucos segundos, o GitHub fornecerá um link público seguro (HTTPS) como:
 
 - **Zero backend**: Todo o processamento de fluxo, regex e montagem de JSON ocorre diretamente na engine JavaScript do seu navegador.
 - **Nenhum dado trafega para a nuvem**: Credenciais, tokens e fluxos do Blip permanecem 100% seguros na sua máquina.
+

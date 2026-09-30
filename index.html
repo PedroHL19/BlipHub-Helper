@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BlipCraft Studio - Ferramentas & Injetor de Trackings</title>
+  <title>BlipHub Helper - Ferramentas & Injetor de Trackings</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -715,7 +715,7 @@
     <div class="brand">
       <div class="brand-icon">⚡</div>
       <div class="brand-info">
-        <h1>BlipCraft Studio</h1>
+        <h1>BlipHub Helper</h1>
         <p>Dev Suite & Trackings</p>
       </div>
     </div>
@@ -1356,7 +1356,7 @@
     type: "TrackEvent",
     $title: "Registro de eventos",
     $invalid: false,
-    _generatedByBlipCraft: true,
+    _generatedByBlipHubHelper: true,
     settings: {
       extras: {},
       category: `${block.$title}`,
@@ -1371,7 +1371,7 @@
     type: "TrackEvent",
     $title: "Registro de eventos",
     $invalid: false,
-    _generatedByBlipCraft: true,
+    _generatedByBlipHubHelper: true,
     settings: {
       extras: {},
       category: `${block.$title} Conteudo`,
@@ -1392,7 +1392,7 @@
     type: "TrackEvent",
     $title: "Registro de eventos Data",
     $invalid: false,
-    _generatedByBlipCraft: true,
+    _generatedByBlipHubHelper: true,
     settings: {
       extras: {},
       category: "exibicao|{{state.name}}",
@@ -1407,7 +1407,7 @@
     type: "TrackEvent",
     $title: "Registro de eventos Data",
     $invalid: false,
-    _generatedByBlipCraft: true,
+    _generatedByBlipHubHelper: true,
     settings: {
       extras: { input: "{{input.content}}" },
       category: "input|{{state.name}}",
@@ -1451,7 +1451,7 @@ ${switchCases}
       type: "ExecuteScript",
       $title: "treat input",
       $invalid: false,
-      _generatedByBlipCraft: true,
+      _generatedByBlipHubHelper: true,
       settings: {
         function: "run",
         source: scriptSource,
@@ -1468,7 +1468,7 @@ ${switchCases}
       type: "TrackEvent",
       $title: "Registro de eventos Data",
       $invalid: false,
-      _generatedByBlipCraft: true,
+      _generatedByBlipHubHelper: true,
       settings: {
         extras: { input: "{{inputFormated}}" },
         category: "input|{{state.name}}",
@@ -1491,7 +1491,7 @@ ${switchCases}
       type: "TrackEvent",
       $title: "Registro de eventos Data",
       $invalid: false,
-      _generatedByBlipCraft: true,
+      _generatedByBlipHubHelper: true,
       settings: {
         extras: { input: "{{input.content}}" },
         category: "input|{{state.name}}",
@@ -1543,7 +1543,7 @@ ${switchCases}
       type: "SetVariable",
       $title: "Definir variável id chamada API",
       $invalid: false,
-      _generatedByBlipCraft: true,
+      _generatedByBlipHubHelper: true,
       settings: {
         variable: variableName,
         value: "{{random.guid}}"
@@ -1584,7 +1584,7 @@ ${switchCases}
       type: "TrackEvent",
       $title: `Tracking API - ${type} - ${name}`,
       $invalid: false,
-      _generatedByBlipCraft: true,
+      _generatedByBlipHubHelper: true,
       settings: {
         extras,
         category: "chamada_api",
@@ -1601,7 +1601,7 @@ ${switchCases}
       type: "TrackEvent",
       $title: "Registro de eventos",
       $invalid: false,
-      _generatedByBlipCraft: true,
+      _generatedByBlipHubHelper: true,
       settings: {
         extras: {
           state: "{{state.name}}",
@@ -1621,9 +1621,9 @@ ${switchCases}
     };
   }
 
-  function cleanPreviousBlipCraftTrackings(bot) {
+  function cleanPreviousBlipHubHelperTrackings(bot) {
     if (!bot?.flow) return;
-    const isOurTracking = (a) => a?._generatedByBlipCraft || (a?.$title && (a.$title.startsWith("Tracking API -") || a.$title === "Registro de eventos Data" || a.$title === "treat input"));
+    const isOurTracking = (a) => a?._generatedByBlipHubHelper || (a?.$title && (a.$title.startsWith("Tracking API -") || a.$title === "Registro de eventos Data" || a.$title === "treat input"));
 
     Object.values(bot.flow).forEach(block => {
       if (Array.isArray(block.$enteringCustomActions)) {
@@ -1662,7 +1662,7 @@ ${switchCases}
       const trkGlobal = document.getElementById('trk_global').checked;
 
       if (optClean) {
-        cleanPreviousBlipCraftTrackings(bot);
+        cleanPreviousBlipHubHelperTrackings(bot);
       }
 
       let injectedCount = 0;
