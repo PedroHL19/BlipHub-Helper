@@ -557,6 +557,111 @@
       font-weight: 600;
       margin-top: 4px;
       cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .whatsapp-btn:hover {
+      background: #32434E;
+    }
+
+    /* WhatsApp List Interactive Drawer (Menu Aberto) */
+    .whatsapp-list-drawer {
+      background-color: #111B21;
+      border: 1px solid #233138;
+      border-radius: 12px;
+      max-width: 380px;
+      margin-top: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .whatsapp-list-header {
+      background-color: #202C33;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #222E35;
+    }
+
+    .whatsapp-list-header h5 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #E9EDEF;
+      margin: 0;
+    }
+
+    .whatsapp-list-body {
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .whatsapp-list-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #00A884;
+      background-color: #182229;
+      padding: 8px 16px;
+      border-top: 1px solid #222E35;
+      border-bottom: 1px solid #222E35;
+    }
+
+    .whatsapp-list-item {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #182229;
+      transition: background-color 0.15s;
+    }
+
+    .whatsapp-list-item:hover {
+      background-color: #202C33;
+    }
+
+    .whatsapp-list-item-content {
+      flex: 1;
+      padding-right: 12px;
+    }
+
+    .whatsapp-list-item-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #E9EDEF;
+      line-height: 1.3;
+    }
+
+    .whatsapp-list-item-desc {
+      font-size: 11px;
+      color: #8696A0;
+      margin-top: 3px;
+      line-height: 1.3;
+    }
+
+    .whatsapp-list-radio {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #8696A0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .whatsapp-list-item:hover .whatsapp-list-radio {
+      border-color: #00A884;
+    }
+
+    .whatsapp-list-empty-hint {
+      padding: 24px 16px;
+      text-align: center;
+      font-size: 12px;
+      color: #8696A0;
+      line-height: 1.4;
     }
 
     .contact-card-preview {
@@ -949,15 +1054,42 @@
         <div>
           <!-- Live Preview -->
           <div class="card">
-            <div class="card-title">Prévia da Mensagem (WhatsApp)</div>
-            <div class="whatsapp-bubble" id="whatsappMenuPreview">
-              <div class="msg-header" id="prevMenuHeader" style="display: none;"></div>
-              <div class="msg-body" id="prevMenuBody">Digite a mensagem do menu...</div>
-              <div class="msg-footer" id="prevMenuFooter" style="display: none;"></div>
-              <button class="whatsapp-btn">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                <span id="prevMenuBtnText">Ver opções</span>
-              </button>
+            <div class="card-title" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+              <span>Prévia no WhatsApp</span>
+              <div class="preset-pills" style="margin-bottom: 0;">
+                <span class="preset-pill active" id="btnViewBoth" style="padding: 4px 10px; font-size: 11px;" onclick="setMenuPreviewMode('both')">Ambos</span>
+                <span class="preset-pill" id="btnViewBubble" style="padding: 4px 10px; font-size: 11px;" onclick="setMenuPreviewMode('bubble')">Balão</span>
+                <span class="preset-pill" id="btnViewDrawer" style="padding: 4px 10px; font-size: 11px;" onclick="setMenuPreviewMode('drawer')">Lista Inteira</span>
+              </div>
+            </div>
+
+            <!-- 1. Balão da Mensagem -->
+            <div id="previewBubbleWrapper">
+              <div class="whatsapp-bubble" id="whatsappMenuPreview">
+                <div class="msg-header" id="prevMenuHeader" style="display: none;"></div>
+                <div class="msg-body" id="prevMenuBody">Digite a mensagem do menu...</div>
+                <div class="msg-footer" id="prevMenuFooter" style="display: none;"></div>
+                <button class="whatsapp-btn" onclick="toggleMenuDrawer()" title="Clique para abrir ou fechar a lista completa">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                  <span id="prevMenuBtnText">Ver opções</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Gaveta com o Menu Inteiro Aberto -->
+            <div id="previewDrawerWrapper" style="margin-top: 14px;">
+              <div class="whatsapp-list-drawer" id="whatsappListDrawer">
+                <div class="whatsapp-list-header">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 13px;">📋</span>
+                    <h5 id="drawerHeaderTitle">Opções da Lista</h5>
+                  </div>
+                  <span id="drawerItemCountBadge" style="font-size: 10px; background: rgba(0, 168, 132, 0.2); color: #00A884; padding: 2px 7px; border-radius: 10px; font-weight: 700;">0 opções</span>
+                </div>
+                <div class="whatsapp-list-body" id="drawerSectionsContainer">
+                  <div class="whatsapp-list-empty-hint">Nenhuma seção adicionada. Preencha as seções ao lado para visualizar a lista inteira aqui.</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1974,12 +2106,59 @@ ${switchCases}
     generateMenuJson();
   }
 
+  let currentMenuPreviewMode = 'both';
+
+  function setMenuPreviewMode(mode) {
+    currentMenuPreviewMode = mode;
+    ['btnViewBoth', 'btnViewBubble', 'btnViewDrawer'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+
+    const bubbleWrapper = document.getElementById('previewBubbleWrapper');
+    const drawerWrapper = document.getElementById('previewDrawerWrapper');
+
+    if (mode === 'both') {
+      const btn = document.getElementById('btnViewBoth');
+      if (btn) btn.classList.add('active');
+      if (bubbleWrapper) bubbleWrapper.style.display = 'block';
+      if (drawerWrapper) drawerWrapper.style.display = 'block';
+    } else if (mode === 'bubble') {
+      const btn = document.getElementById('btnViewBubble');
+      if (btn) btn.classList.add('active');
+      if (bubbleWrapper) bubbleWrapper.style.display = 'block';
+      if (drawerWrapper) drawerWrapper.style.display = 'none';
+    } else if (mode === 'drawer') {
+      const btn = document.getElementById('btnViewDrawer');
+      if (btn) btn.classList.add('active');
+      if (bubbleWrapper) bubbleWrapper.style.display = 'none';
+      if (drawerWrapper) drawerWrapper.style.display = 'block';
+    }
+  }
+
+  function toggleMenuDrawer() {
+    const drawerWrapper = document.getElementById('previewDrawerWrapper');
+    if (!drawerWrapper) return;
+    if (drawerWrapper.style.display === 'none') {
+      drawerWrapper.style.display = 'block';
+      drawerWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showToast('Lista completa expandida!');
+    } else {
+      if (currentMenuPreviewMode === 'both') {
+        drawerWrapper.style.display = 'none';
+      } else {
+        setMenuPreviewMode('both');
+      }
+    }
+  }
+
   function updateMenuPreview() {
     const title = document.getElementById('menuTitle').value.trim();
     const body = document.getElementById('menuBody').value.trim();
     const footer = document.getElementById('menuFooter').value.trim();
     const btn = document.getElementById('menuButtonText').value.trim();
 
+    // 1. Atualiza balão da mensagem
     const pHeader = document.getElementById('prevMenuHeader');
     const pBody = document.getElementById('prevMenuBody');
     const pFooter = document.getElementById('prevMenuFooter');
@@ -2004,6 +2183,61 @@ ${switchCases}
     }
 
     pBtn.textContent = btn || "Ver opções";
+
+    // 2. Atualiza a lista inteira (Gaveta aberta do WhatsApp)
+    const drawerTitle = document.getElementById('drawerHeaderTitle');
+    if (drawerTitle) {
+      drawerTitle.textContent = title || btn || "Opções da Lista";
+    }
+
+    const drawerContainer = document.getElementById('drawerSectionsContainer');
+    const drawerBadge = document.getElementById('drawerItemCountBadge');
+
+    let totalOptions = 0;
+    menuSections.forEach(sec => {
+      totalOptions += (sec.options || []).length;
+    });
+
+    if (drawerBadge) {
+      drawerBadge.textContent = `${totalOptions} de 10 opções`;
+      if (totalOptions > 10) {
+        drawerBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+        drawerBadge.style.color = '#EF4444';
+      } else {
+        drawerBadge.style.background = 'rgba(0, 168, 132, 0.2)';
+        drawerBadge.style.color = '#00A884';
+      }
+    }
+
+    if (!drawerContainer) return;
+
+    if (menuSections.length === 0 || totalOptions === 0) {
+      drawerContainer.innerHTML = '<div class="whatsapp-list-empty-hint">Nenhuma seção ou opção adicionada ainda. Preencha as seções ao lado para visualizar o menu inteiro aqui.</div>';
+      return;
+    }
+
+    let drawerHtml = '';
+    menuSections.forEach((sec, sIdx) => {
+      const secTitle = sec.title ? sec.title.trim() : `Seção ${sIdx + 1}`;
+      drawerHtml += `<div class="whatsapp-list-section-title">${secTitle}</div>`;
+
+      (sec.options || []).forEach((opt, oIdx) => {
+        const itemTitle = opt.title ? opt.title.trim() : `Opção ${oIdx + 1}`;
+        const itemDesc = opt.description ? opt.description.trim() : '';
+
+        drawerHtml += `
+          <div class="whatsapp-list-item" title="ID: ${opt.id || 'id_opcao'}">
+            <div class="whatsapp-list-item-content">
+              <div class="whatsapp-list-item-title">${itemTitle}</div>
+              ${itemDesc ? `<div class="whatsapp-list-item-desc">${itemDesc}</div>` : ''}
+            </div>
+            <div class="whatsapp-list-radio"></div>
+          </div>
+        `;
+      });
+    });
+
+    drawerContainer.innerHTML = drawerHtml;
   }
 
   function generateMenuJson() {
