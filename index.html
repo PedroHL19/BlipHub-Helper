@@ -939,8 +939,10 @@
 
           <div id="menuSectionsContainer"></div>
 
-          <div style="margin-top: 20px;">
+          <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
             <button class="btn btn-primary" onclick="generateMenuJson()">Gerar JSON da Lista</button>
+            <button class="btn btn-secondary" onclick="clearMenuForm()">Limpar Menu</button>
+            <button class="btn btn-secondary" onclick="loadDefaultMenuExample()">Restaurar Exemplo</button>
           </div>
         </div>
 
@@ -1876,6 +1878,16 @@ ${switchCases}
       warningBanner.style.display = dupes.size > 0 ? 'block' : 'none';
     }
 
+    if (menuSections.length === 0) {
+      container.innerHTML = `
+        <div style="background: var(--bg-input); border: 1px dashed var(--border-color); border-radius: var(--radius-sm); padding: 28px 20px; text-align: center; color: var(--text-dim); margin-bottom: 12px;">
+          <p style="font-size: 14px; margin-bottom: 12px; color: var(--text-muted);">Nenhuma seção no menu. Comece adicionando uma seção abaixo:</p>
+          <button class="btn btn-secondary btn-sm" onclick="addMenuSection()">+ Adicionar Seção</button>
+        </div>
+      `;
+      return;
+    }
+
     menuSections.forEach((sec, sIdx) => {
       const secDiv = document.createElement('div');
       secDiv.className = 'schedule-day-group';
@@ -2060,6 +2072,37 @@ ${switchCases}
     if (footer) json.interactive.footer = { text: footer };
 
     document.getElementById('menuGeneratedJson').textContent = JSON.stringify(json, null, 2);
+  }
+
+  function clearMenuForm() {
+    document.getElementById('menuTitle').value = '';
+    document.getElementById('menuBody').value = '';
+    document.getElementById('menuFooter').value = '';
+    document.getElementById('menuButtonText').value = 'Ver opções';
+    menuSections = [];
+    renderMenuSections();
+    updateMenuPreview();
+    document.getElementById('menuGeneratedJson').textContent = '// Menu limpo. Adicione seções e clique em "Gerar JSON da Lista"';
+    showToast('Menu limpo com sucesso!');
+  }
+
+  function loadDefaultMenuExample() {
+    document.getElementById('menuTitle').value = 'Central de Atendimento';
+    document.getElementById('menuBody').value = 'Por favor, escolha uma das opções abaixo:';
+    document.getElementById('menuFooter').value = 'Atendimento 24h';
+    document.getElementById('menuButtonText').value = 'Ver opções';
+    menuSections = [
+      {
+        title: "Serviços Principais",
+        options: [
+          { id: "falar_com_suporte", title: "Falar com Suporte", description: "Dúvidas técnicas e atendimento" },
+          { id: "segunda_via_boleto", title: "Segunda Via Boleto", description: "Emitir código de barras ou PDF" }
+        ]
+      }
+    ];
+    renderMenuSections();
+    generateMenuJson();
+    showToast('Exemplo restaurado!');
   }
 
   /* =========================================================================
