@@ -1026,13 +1026,20 @@
             <input type="text" class="form-control" id="menuFooter" placeholder="Ex: Atendimento automático 24h" oninput="updateMenuPreview()">
           </div>
           <div class="form-group">
-            <label>Texto do Botão de Abertura da Lista:</label>
-            <input type="text" class="form-control" id="menuButtonText" value="Ver opções" placeholder="Ex: Ver opções" oninput="updateMenuPreview()">
+            <label>Texto do Botão de Abertura da Lista (Obrigatório):</label>
+            <input type="text" class="form-control" id="menuButtonText" placeholder="Ex: Escolher opção, Abrir menu..." oninput="updateMenuPreview()">
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 12px;">
-            <div style="font-weight: 700; font-size: 14px;">Seções e Opções do Menu</div>
-            <button class="btn btn-secondary btn-sm" onclick="addMenuSection()">+ Adicionar Seção</button>
+          <div style="border-top: 1px solid var(--border-color); margin: 20px 0 16px; padding-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="font-weight: 700; font-size: 14px;">Opções do Menu (Seção Única)</div>
+              <span id="menuOptionCounter" style="font-size: 12px; color: var(--text-dim); font-weight: 600;">0 / 10 opções</span>
+            </div>
+
+            <div class="form-group">
+              <label>Título da Seção (Opcional):</label>
+              <input type="text" class="form-control" id="sectionTitle" placeholder="Ex: Atendimento, Serviços..." oninput="onSectionTitleInput(this.value)">
+            </div>
           </div>
 
           <div id="duplicateIdWarning" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 14px; font-size: 13px; color: #FCA5A5;">
@@ -1042,7 +1049,11 @@
             </div>
           </div>
 
-          <div id="menuSectionsContainer"></div>
+          <div id="menuOptionsContainer"></div>
+
+          <div style="margin-top: 10px;">
+            <button class="btn btn-secondary btn-sm" id="btnAddOption" onclick="addMenuOption()">+ Adicionar Opção</button>
+          </div>
 
           <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
             <button class="btn btn-primary" onclick="generateMenuJson()">Gerar JSON da Lista</button>
@@ -1071,7 +1082,7 @@
                 <div class="msg-footer" id="prevMenuFooter" style="display: none;"></div>
                 <button class="whatsapp-btn" onclick="toggleMenuDrawer()" title="Clique para abrir ou fechar a lista completa">
                   <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                  <span id="prevMenuBtnText">Ver opções</span>
+                  <span id="prevMenuBtnText">Texto do botão</span>
                 </button>
               </div>
             </div>
@@ -1080,14 +1091,11 @@
             <div id="previewDrawerWrapper" style="margin-top: 14px;">
               <div class="whatsapp-list-drawer" id="whatsappListDrawer">
                 <div class="whatsapp-list-header">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 13px;">📋</span>
-                    <h5 id="drawerHeaderTitle">Opções da Lista</h5>
-                  </div>
+                  <h5 id="drawerHeaderTitle">Opções da Lista</h5>
                   <span id="drawerItemCountBadge" style="font-size: 10px; background: rgba(0, 168, 132, 0.2); color: #00A884; padding: 2px 7px; border-radius: 10px; font-weight: 700;">0 opções</span>
                 </div>
                 <div class="whatsapp-list-body" id="drawerSectionsContainer">
-                  <div class="whatsapp-list-empty-hint">Nenhuma seção adicionada. Preencha as seções ao lado para visualizar a lista inteira aqui.</div>
+                  <div class="whatsapp-list-empty-hint">Nenhuma opção adicionada. Adicione opções ao lado para visualizar a lista inteira aqui.</div>
                 </div>
               </div>
             </div>
@@ -1940,9 +1948,12 @@ ${switchCases}
   }
 
   /* =========================================================================
-     3. MENU INTERATIVO WHATSAPP (LIST MESSAGE)
+     3. MENU INTERATIVO WHATSAPP (LIST MESSAGE) - SEÇÃO ÚNICA
      ========================================================================= */
-  let menuSections = [];
+  let menuSection = {
+    title: "",
+    options: []
+  };
 
   function sanitizeOptionId(raw) {
     return (raw || "")
@@ -1957,13 +1968,11 @@ ${switchCases}
 
   function getDuplicateIds() {
     const counts = {};
-    menuSections.forEach(sec => {
-      sec.options.forEach(opt => {
-        const id = sanitizeOptionId(opt.id || opt.title || "");
-        if (id) {
-          counts[id] = (counts[id] || 0) + 1;
-        }
-      });
+    menuSection.options.forEach(opt => {
+      const id = sanitizeOptionId(opt.id || opt.title || "");
+      if (id) {
+        counts[id] = (counts[id] || 0) + 1;
+      }
     });
     const dupes = new Set();
     for (const [id, count] of Object.entries(counts)) {
@@ -1974,26 +1983,25 @@ ${switchCases}
 
   function autoFixDuplicateIds() {
     const seen = new Set();
-    menuSections.forEach(sec => {
-      sec.options.forEach(opt => {
-        let base = sanitizeOptionId(opt.id || opt.title || "opcao");
-        if (!base) base = "opcao";
-        let unique = base;
-        let counter = 2;
-        while (seen.has(unique)) {
-          unique = `${base}_${counter++}`;
-        }
-        seen.add(unique);
-        opt.id = unique;
-      });
+    menuSection.options.forEach(opt => {
+      let base = sanitizeOptionId(opt.id || opt.title || "opcao");
+      if (!base) base = "opcao";
+      let unique = base;
+      let counter = 2;
+      while (seen.has(unique)) {
+        unique = `${base}_${counter++}`;
+      }
+      seen.add(unique);
+      opt.id = unique;
     });
-    renderMenuSections();
+    renderMenuOptions();
     generateMenuJson();
     showToast("IDs corrigidos! Todos os IDs agora são únicos.");
   }
 
-  function renderMenuSections() {
-    const container = document.getElementById('menuSectionsContainer');
+  function renderMenuOptions() {
+    const container = document.getElementById('menuOptionsContainer');
+    if (!container) return;
     container.innerHTML = '';
     const dupes = getDuplicateIds();
 
@@ -2002,107 +2010,102 @@ ${switchCases}
       warningBanner.style.display = dupes.size > 0 ? 'block' : 'none';
     }
 
-    if (menuSections.length === 0) {
+    const counterEl = document.getElementById('menuOptionCounter');
+    const total = menuSection.options.length;
+    if (counterEl) {
+      counterEl.textContent = `${total} / 10 opções`;
+      counterEl.style.color = total >= 10 ? 'var(--warning)' : 'var(--text-dim)';
+    }
+
+    const btnAdd = document.getElementById('btnAddOption');
+    if (btnAdd) {
+      btnAdd.disabled = total >= 10;
+      btnAdd.title = total >= 10 ? 'Limite de 10 opções do WhatsApp atingido' : 'Adicionar nova opção';
+    }
+
+    if (total === 0) {
       container.innerHTML = `
-        <div style="background: var(--bg-input); border: 1px dashed var(--border-color); border-radius: var(--radius-sm); padding: 28px 20px; text-align: center; color: var(--text-dim); margin-bottom: 12px;">
-          <p style="font-size: 14px; margin-bottom: 12px; color: var(--text-muted);">Nenhuma seção no menu. Comece adicionando uma seção abaixo:</p>
-          <button class="btn btn-secondary btn-sm" onclick="addMenuSection()">+ Adicionar Seção</button>
+        <div style="background: var(--bg-input); border: 1px dashed var(--border-color); border-radius: var(--radius-sm); padding: 24px 16px; text-align: center; color: var(--text-dim); margin-bottom: 12px;">
+          <p style="font-size: 13px; margin-bottom: 10px; color: var(--text-muted);">Nenhuma opção no menu ainda.</p>
+          <button class="btn btn-secondary btn-sm" onclick="addMenuOption()">+ Adicionar Primeira Opção</button>
         </div>
       `;
       return;
     }
 
-    menuSections.forEach((sec, sIdx) => {
-      const secDiv = document.createElement('div');
-      secDiv.className = 'schedule-day-group';
-      secDiv.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <input type="text" class="form-control" style="font-weight:700; width:65%;" value="${sec.title || ''}" 
-            placeholder="Título da Seção (ex: Atendimento)" oninput="menuSections[${sIdx}].title = this.value; generateMenuJson();">
-          <button class="btn btn-danger btn-sm" onclick="removeMenuSection(${sIdx})">Remover Seção</button>
-        </div>
+    let html = `
+      <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; font-size:11px; font-weight:700; color:var(--text-dim); text-transform:uppercase; padding:0 4px 6px;">
+        <span>ID (Único)</span>
+        <span>Título (Max 24)</span>
+        <span>Descrição (Opcional, Max 72)</span>
+        <span></span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+    `;
 
-        <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; font-size:11px; font-weight:700; color:var(--text-dim); text-transform:uppercase; padding:0 4px 6px;">
-          <span>ID (Único)</span>
-          <span>Título (Max 24)</span>
-          <span>Descrição (Opcional, Max 72)</span>
-          <span></span>
-        </div>
+    menuSection.options.forEach((opt, oIdx) => {
+      const currentIdClean = sanitizeOptionId(opt.id || opt.title || "");
+      const isDupe = dupes.has(currentIdClean);
+      const borderStyle = isDupe ? "border-color: var(--danger); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);" : "";
 
-        <div id="secOptionsContainer_${sIdx}" style="display:flex; flex-direction:column; gap:8px;">
-          ${sec.options.map((opt, oIdx) => {
-            const currentIdClean = sanitizeOptionId(opt.id || opt.title || "");
-            const isDupe = dupes.has(currentIdClean);
-            const borderStyle = isDupe ? "border-color: var(--danger); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);" : "";
-
-            return `
-            <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; align-items:center; background:#0F172A; padding:8px; border-radius:6px;">
-              <input type="text" class="form-control" style="font-size:12px; font-family:'JetBrains Mono', monospace; ${borderStyle}" 
-                value="${opt.id || ''}" placeholder="id_opcao" title="${isDupe ? 'Atenção: Este ID está duplicado!' : 'ID único da opção'}"
-                oninput="onOptionIdInput(${sIdx}, ${oIdx}, this.value)">
-              <input type="text" class="form-control" style="font-size:12px;" value="${opt.title || ''}" placeholder="Título (obrigatório)" maxlength="24"
-                oninput="onOptionTitleInput(${sIdx}, ${oIdx}, this.value)">
-              <input type="text" class="form-control" style="font-size:12px;" value="${opt.description || ''}" placeholder="Descrição (opcional)" maxlength="72"
-                oninput="menuSections[${sIdx}].options[${oIdx}].description = this.value; generateMenuJson();">
-              <span class="schedule-remove-btn" title="Remover opção" onclick="removeMenuOption(${sIdx}, ${oIdx})">&times;</span>
-            </div>
-            `;
-          }).join('')}
+      html += `
+        <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; align-items:center; background:#0F172A; padding:8px; border-radius:6px;">
+          <input type="text" class="form-control" style="font-size:12px; font-family:'JetBrains Mono', monospace; ${borderStyle}" 
+            value="${opt.id || ''}" placeholder="id_opcao" title="${isDupe ? 'Atenção: Este ID está duplicado!' : 'ID único da opção'}"
+            oninput="onOptionIdInput(${oIdx}, this.value)">
+          <input type="text" class="form-control" style="font-size:12px;" value="${opt.title || ''}" placeholder="Título (obrigatório)" maxlength="24"
+            oninput="onOptionTitleInput(${oIdx}, this.value)">
+          <input type="text" class="form-control" style="font-size:12px;" value="${opt.description || ''}" placeholder="Descrição (opcional)" maxlength="72"
+            oninput="menuSection.options[${oIdx}].description = this.value; generateMenuJson();">
+          <span class="schedule-remove-btn" title="Remover opção" onclick="removeMenuOption(${oIdx})">&times;</span>
         </div>
-        <button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="addMenuOption(${sIdx})">+ Adicionar Opção</button>
       `;
-      container.appendChild(secDiv);
     });
+
+    html += `</div>`;
+    container.innerHTML = html;
   }
 
-  function onOptionIdInput(sIdx, oIdx, val) {
-    menuSections[sIdx].options[oIdx].id = sanitizeOptionId(val);
-    menuSections[sIdx].options[oIdx]._manualId = true;
-    renderMenuSections();
+  function onSectionTitleInput(val) {
+    menuSection.title = val;
     generateMenuJson();
   }
 
-  function onOptionTitleInput(sIdx, oIdx, val) {
-    menuSections[sIdx].options[oIdx].title = val;
-    // Se o usuário ainda não digitou um ID customizado manualmente, sincroniza um ID seguro
-    if (!menuSections[sIdx].options[oIdx]._manualId && !menuSections[sIdx].options[oIdx].id) {
-      menuSections[sIdx].options[oIdx].id = sanitizeOptionId(val);
+  function onOptionIdInput(oIdx, val) {
+    menuSection.options[oIdx].id = sanitizeOptionId(val);
+    menuSection.options[oIdx]._manualId = true;
+    renderMenuOptions();
+    generateMenuJson();
+  }
+
+  function onOptionTitleInput(oIdx, val) {
+    menuSection.options[oIdx].title = val;
+    if (!menuSection.options[oIdx]._manualId && !menuSection.options[oIdx].id) {
+      menuSection.options[oIdx].id = sanitizeOptionId(val);
     }
-    renderMenuSections();
+    renderMenuOptions();
     generateMenuJson();
   }
 
-  function addMenuSection() {
-    const secNum = menuSections.length + 1;
-    menuSections.push({
-      title: "",
-      options: [{ id: `opcao_${secNum}_1`, title: "", description: "" }]
-    });
-    renderMenuSections();
-    generateMenuJson();
-  }
-
-  function removeMenuSection(sIdx) {
-    menuSections.splice(sIdx, 1);
-    renderMenuSections();
-    generateMenuJson();
-  }
-
-  function addMenuOption(sIdx) {
-    const optNum = menuSections[sIdx].options.length + 1;
-    let baseId = `opcao_${sIdx + 1}_${optNum}`;
+  function addMenuOption() {
+    if (menuSection.options.length >= 10) {
+      showToast('O WhatsApp permite no máximo 10 opções no menu.');
+      return;
+    }
+    const optNum = menuSection.options.length + 1;
+    let baseId = `opcao_${optNum}`;
     const dupes = getDuplicateIds();
     while (dupes.has(baseId)) {
       baseId += `_${Math.floor(Math.random() * 10)}`;
     }
-    menuSections[sIdx].options.push({ id: baseId, title: "", description: "" });
-    renderMenuSections();
+    menuSection.options.push({ id: baseId, title: "", description: "" });
+    renderMenuOptions();
     generateMenuJson();
   }
 
-  function removeMenuOption(sIdx, oIdx) {
-    menuSections[sIdx].options.splice(oIdx, 1);
-    renderMenuSections();
+  function removeMenuOption(oIdx) {
+    menuSection.options.splice(oIdx, 1);
+    renderMenuOptions();
     generateMenuJson();
   }
 
@@ -2158,7 +2161,7 @@ ${switchCases}
     const footer = document.getElementById('menuFooter').value.trim();
     const btn = document.getElementById('menuButtonText').value.trim();
 
-    // 1. Atualiza balão da mensagem
+    // 1. Balão da Mensagem
     const pHeader = document.getElementById('prevMenuHeader');
     const pBody = document.getElementById('prevMenuBody');
     const pFooter = document.getElementById('prevMenuFooter');
@@ -2182,9 +2185,9 @@ ${switchCases}
       pFooter.textContent = '';
     }
 
-    pBtn.textContent = btn || "Ver opções";
+    pBtn.textContent = btn || "Texto do botão";
 
-    // 2. Atualiza a lista inteira (Gaveta aberta do WhatsApp)
+    // 2. Gaveta aberta do WhatsApp
     const drawerTitle = document.getElementById('drawerHeaderTitle');
     if (drawerTitle) {
       drawerTitle.textContent = title || btn || "Opções da Lista";
@@ -2193,48 +2196,39 @@ ${switchCases}
     const drawerContainer = document.getElementById('drawerSectionsContainer');
     const drawerBadge = document.getElementById('drawerItemCountBadge');
 
-    let totalOptions = 0;
-    menuSections.forEach(sec => {
-      totalOptions += (sec.options || []).length;
-    });
+    const totalOptions = menuSection.options.length;
 
     if (drawerBadge) {
       drawerBadge.textContent = `${totalOptions} de 10 opções`;
-      if (totalOptions > 10) {
-        drawerBadge.style.background = 'rgba(239, 68, 68, 0.2)';
-        drawerBadge.style.color = '#EF4444';
-      } else {
-        drawerBadge.style.background = 'rgba(0, 168, 132, 0.2)';
-        drawerBadge.style.color = '#00A884';
-      }
+      drawerBadge.style.background = totalOptions > 10 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(0, 168, 132, 0.2)';
+      drawerBadge.style.color = totalOptions > 10 ? '#EF4444' : '#00A884';
     }
 
     if (!drawerContainer) return;
 
-    if (menuSections.length === 0 || totalOptions === 0) {
-      drawerContainer.innerHTML = '<div class="whatsapp-list-empty-hint">Nenhuma seção ou opção adicionada ainda. Preencha as seções ao lado para visualizar o menu inteiro aqui.</div>';
+    if (totalOptions === 0) {
+      drawerContainer.innerHTML = '<div class="whatsapp-list-empty-hint">Nenhuma opção adicionada ainda. Adicione opções ao lado para visualizar o menu inteiro aqui.</div>';
       return;
     }
 
     let drawerHtml = '';
-    menuSections.forEach((sec, sIdx) => {
-      const secTitle = sec.title ? sec.title.trim() : `Seção ${sIdx + 1}`;
-      drawerHtml += `<div class="whatsapp-list-section-title">${secTitle}</div>`;
+    if (menuSection.title && menuSection.title.trim() !== '') {
+      drawerHtml += `<div class="whatsapp-list-section-title">${menuSection.title.trim()}</div>`;
+    }
 
-      (sec.options || []).forEach((opt, oIdx) => {
-        const itemTitle = opt.title ? opt.title.trim() : `Opção ${oIdx + 1}`;
-        const itemDesc = opt.description ? opt.description.trim() : '';
+    menuSection.options.forEach((opt, oIdx) => {
+      const itemTitle = opt.title ? opt.title.trim() : `Opção ${oIdx + 1}`;
+      const itemDesc = opt.description ? opt.description.trim() : '';
 
-        drawerHtml += `
-          <div class="whatsapp-list-item" title="ID: ${opt.id || 'id_opcao'}">
-            <div class="whatsapp-list-item-content">
-              <div class="whatsapp-list-item-title">${itemTitle}</div>
-              ${itemDesc ? `<div class="whatsapp-list-item-desc">${itemDesc}</div>` : ''}
-            </div>
-            <div class="whatsapp-list-radio"></div>
+      drawerHtml += `
+        <div class="whatsapp-list-item" title="ID: ${opt.id || 'id_opcao'}">
+          <div class="whatsapp-list-item-content">
+            <div class="whatsapp-list-item-title">${itemTitle}</div>
+            ${itemDesc ? `<div class="whatsapp-list-item-desc">${itemDesc}</div>` : ''}
           </div>
-        `;
-      });
+          <div class="whatsapp-list-radio"></div>
+        </div>
+      `;
     });
 
     drawerContainer.innerHTML = drawerHtml;
@@ -2246,51 +2240,49 @@ ${switchCases}
     const title = document.getElementById('menuTitle').value.trim();
     const body = document.getElementById('menuBody').value.trim() || "Por favor, escolha uma das opções abaixo:";
     const footer = document.getElementById('menuFooter').value.trim();
-    const btnText = document.getElementById('menuButtonText').value.trim() || "Ver opções";
+    const btnText = document.getElementById('menuButtonText').value.trim() || "Opções";
 
-    if (menuSections.length === 0) {
-      document.getElementById('menuGeneratedJson').textContent = '// Nenhuma seção criada. Adicione seções para gerar o JSON da lista.';
+    if (menuSection.options.length === 0) {
+      document.getElementById('menuGeneratedJson').textContent = '// Adicione pelo menos uma opção para gerar o JSON da lista.';
       return;
     }
 
     const seenIds = new Set();
     let hadDuplication = false;
 
-    const sections = menuSections.map((sec, sIdx) => ({
-      title: sec.title || `Seção ${sIdx + 1}`,
-      rows: sec.options.map((opt, oIdx) => {
-        let cleanId = sanitizeOptionId(opt.id || opt.title || "opcao");
-        if (!cleanId) cleanId = `opcao_${sIdx + 1}_${oIdx + 1}`;
+    const rows = menuSection.options.map((opt, oIdx) => {
+      let cleanId = sanitizeOptionId(opt.id || opt.title || "opcao");
+      if (!cleanId) cleanId = `opcao_${oIdx + 1}`;
 
-        let finalId = cleanId;
-        let counter = 2;
-        while (seenIds.has(finalId)) {
-          hadDuplication = true;
-          finalId = `${cleanId}_${counter++}`;
-        }
-        seenIds.add(finalId);
+      let finalId = cleanId;
+      let counter = 2;
+      while (seenIds.has(finalId)) {
+        hadDuplication = true;
+        finalId = `${cleanId}_${counter++}`;
+      }
+      seenIds.add(finalId);
 
-        // Se houve correção automática de duplicata, atualiza o id original
-        if (finalId !== opt.id) {
-          opt.id = finalId;
-        }
+      if (finalId !== opt.id) {
+        opt.id = finalId;
+      }
 
-        const rowObj = {
-          id: finalId,
-          title: opt.title || `Opção ${oIdx + 1}`
-        };
+      const rowObj = {
+        id: finalId,
+        title: opt.title || `Opção ${oIdx + 1}`
+      };
 
-        if (opt.description && opt.description.trim() !== "") {
-          rowObj.description = opt.description.trim();
-        }
+      if (opt.description && opt.description.trim() !== "") {
+        rowObj.description = opt.description.trim();
+      }
 
-        return rowObj;
-      })
-    }));
+      return rowObj;
+    });
 
     if (hadDuplication) {
-      setTimeout(() => renderMenuSections(), 50);
+      setTimeout(() => renderMenuOptions(), 50);
     }
+
+    const sectionTitle = menuSection.title && menuSection.title.trim() !== "" ? menuSection.title.trim() : "Opções";
 
     const json = {
       recipient_type: "individual",
@@ -2300,7 +2292,12 @@ ${switchCases}
         body: { text: body },
         action: {
           button: btnText,
-          sections: sections
+          sections: [
+            {
+              title: sectionTitle,
+              rows: rows
+            }
+          ]
         }
       }
     };
@@ -2315,11 +2312,13 @@ ${switchCases}
     document.getElementById('menuTitle').value = '';
     document.getElementById('menuBody').value = '';
     document.getElementById('menuFooter').value = '';
-    document.getElementById('menuButtonText').value = 'Ver opções';
-    menuSections = [];
-    renderMenuSections();
+    document.getElementById('menuButtonText').value = '';
+    const secTitleInput = document.getElementById('sectionTitle');
+    if (secTitleInput) secTitleInput.value = '';
+    menuSection = { title: '', options: [] };
+    renderMenuOptions();
     updateMenuPreview();
-    document.getElementById('menuGeneratedJson').textContent = '// Menu limpo. Adicione seções e clique em "Gerar JSON da Lista"';
+    document.getElementById('menuGeneratedJson').textContent = '// Menu limpo. Adicione opções e clique em "Gerar JSON da Lista"';
     showToast('Menu limpo com sucesso!');
   }
 
@@ -2328,16 +2327,16 @@ ${switchCases}
     document.getElementById('menuBody').value = 'Por favor, escolha uma das opções abaixo:';
     document.getElementById('menuFooter').value = 'Atendimento 24h';
     document.getElementById('menuButtonText').value = 'Ver opções';
-    menuSections = [
-      {
-        title: "Serviços Principais",
-        options: [
-          { id: "falar_com_suporte", title: "Falar com Suporte", description: "Dúvidas técnicas e atendimento" },
-          { id: "segunda_via_boleto", title: "Segunda Via Boleto", description: "Emitir código de barras ou PDF" }
-        ]
-      }
-    ];
-    renderMenuSections();
+    const secTitleInput = document.getElementById('sectionTitle');
+    if (secTitleInput) secTitleInput.value = 'Serviços Principais';
+    menuSection = {
+      title: "Serviços Principais",
+      options: [
+        { id: "falar_com_suporte", title: "Falar com Suporte", description: "Dúvidas técnicas e atendimento" },
+        { id: "segunda_via_boleto", title: "Segunda Via Boleto", description: "Emitir código de barras ou PDF" }
+      ]
+    };
+    renderMenuOptions();
     generateMenuJson();
     showToast('Exemplo restaurado!');
   }
@@ -2585,7 +2584,7 @@ ${switchCases}
 
   // Inicializações
   window.addEventListener('DOMContentLoaded', () => {
-    renderMenuSections();
+    renderMenuOptions();
     generateMenuJson();
     generateCtaJson();
     renderSchedule();
