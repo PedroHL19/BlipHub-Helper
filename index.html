@@ -914,7 +914,7 @@
           </div>
           <div class="form-group">
             <label>Mensagem Principal / Corpo (Obrigatório):</label>
-            <textarea class="form-control" id="menuBody" rows="3" placeholder="Selecione uma das opções abaixo para prosseguir:" oninput="updateMenuPreview()">Por favor, escolha uma das opções abaixo:</textarea>
+            <textarea class="form-control" id="menuBody" rows="3" placeholder="Digite a mensagem que acompanha a lista (ex: Escolha uma das opções abaixo:)" oninput="updateMenuPreview()"></textarea>
           </div>
           <div class="form-group">
             <label>Texto do Rodapé (Opcional):</label>
@@ -951,9 +951,9 @@
           <div class="card">
             <div class="card-title">Prévia da Mensagem (WhatsApp)</div>
             <div class="whatsapp-bubble" id="whatsappMenuPreview">
-              <div class="msg-header" id="prevMenuHeader">Central de Atendimento</div>
-              <div class="msg-body" id="prevMenuBody">Por favor, escolha uma das opções abaixo:</div>
-              <div class="msg-footer" id="prevMenuFooter">Atendimento 24h</div>
+              <div class="msg-header" id="prevMenuHeader" style="display: none;"></div>
+              <div class="msg-body" id="prevMenuBody">Digite a mensagem do menu...</div>
+              <div class="msg-footer" id="prevMenuFooter" style="display: none;"></div>
               <button class="whatsapp-btn">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
                 <span id="prevMenuBtnText">Ver opções</span>
@@ -1810,15 +1810,7 @@ ${switchCases}
   /* =========================================================================
      3. MENU INTERATIVO WHATSAPP (LIST MESSAGE)
      ========================================================================= */
-  let menuSections = [
-    {
-      title: "Serviços Principais",
-      options: [
-        { id: "falar_com_suporte", title: "Falar com Suporte", description: "Dúvidas técnicas e atendimento" },
-        { id: "segunda_via_boleto", title: "Segunda Via Boleto", description: "Emitir código de barras ou PDF" }
-      ]
-    }
-  ];
+  let menuSections = [];
 
   function sanitizeOptionId(raw) {
     return (raw || "")
@@ -1893,7 +1885,7 @@ ${switchCases}
       secDiv.className = 'schedule-day-group';
       secDiv.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <input type="text" class="form-control" style="font-weight:700; width:65%;" value="${sec.title}" 
+          <input type="text" class="form-control" style="font-weight:700; width:65%;" value="${sec.title || ''}" 
             placeholder="Título da Seção (ex: Atendimento)" oninput="menuSections[${sIdx}].title = this.value; generateMenuJson();">
           <button class="btn btn-danger btn-sm" onclick="removeMenuSection(${sIdx})">Remover Seção</button>
         </div>
@@ -1901,7 +1893,7 @@ ${switchCases}
         <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; font-size:11px; font-weight:700; color:var(--text-dim); text-transform:uppercase; padding:0 4px 6px;">
           <span>ID (Único)</span>
           <span>Título (Max 24)</span>
-          <span>Descrição (Max 72)</span>
+          <span>Descrição (Opcional, Max 72)</span>
           <span></span>
         </div>
 
@@ -1916,9 +1908,9 @@ ${switchCases}
               <input type="text" class="form-control" style="font-size:12px; font-family:'JetBrains Mono', monospace; ${borderStyle}" 
                 value="${opt.id || ''}" placeholder="id_opcao" title="${isDupe ? 'Atenção: Este ID está duplicado!' : 'ID único da opção'}"
                 oninput="onOptionIdInput(${sIdx}, ${oIdx}, this.value)">
-              <input type="text" class="form-control" style="font-size:12px;" value="${opt.title}" placeholder="Título" maxlength="24"
+              <input type="text" class="form-control" style="font-size:12px;" value="${opt.title || ''}" placeholder="Título (obrigatório)" maxlength="24"
                 oninput="onOptionTitleInput(${sIdx}, ${oIdx}, this.value)">
-              <input type="text" class="form-control" style="font-size:12px;" value="${opt.description}" placeholder="Descrição" maxlength="72"
+              <input type="text" class="form-control" style="font-size:12px;" value="${opt.description || ''}" placeholder="Descrição (opcional)" maxlength="72"
                 oninput="menuSections[${sIdx}].options[${oIdx}].description = this.value; generateMenuJson();">
               <span class="schedule-remove-btn" title="Remover opção" onclick="removeMenuOption(${sIdx}, ${oIdx})">&times;</span>
             </div>
@@ -1951,8 +1943,8 @@ ${switchCases}
   function addMenuSection() {
     const secNum = menuSections.length + 1;
     menuSections.push({
-      title: `Seção ${secNum}`,
-      options: [{ id: `opcao_${secNum}_1`, title: "Nova Opção", description: "Descrição" }]
+      title: "",
+      options: [{ id: `opcao_${secNum}_1`, title: "", description: "" }]
     });
     renderMenuSections();
     generateMenuJson();
@@ -1971,7 +1963,7 @@ ${switchCases}
     while (dupes.has(baseId)) {
       baseId += `_${Math.floor(Math.random() * 10)}`;
     }
-    menuSections[sIdx].options.push({ id: baseId, title: "Nova Opção", description: "Detalhes da opção" });
+    menuSections[sIdx].options.push({ id: baseId, title: "", description: "" });
     renderMenuSections();
     generateMenuJson();
   }
@@ -1998,15 +1990,17 @@ ${switchCases}
       pHeader.textContent = title;
     } else {
       pHeader.style.display = 'none';
+      pHeader.textContent = '';
     }
 
-    pBody.textContent = body || "Selecione uma opção:";
+    pBody.textContent = body || "Digite a mensagem do menu...";
     
     if (footer) {
       pFooter.style.display = 'block';
       pFooter.textContent = footer;
     } else {
       pFooter.style.display = 'none';
+      pFooter.textContent = '';
     }
 
     pBtn.textContent = btn || "Ver opções";
@@ -2020,11 +2014,16 @@ ${switchCases}
     const footer = document.getElementById('menuFooter').value.trim();
     const btnText = document.getElementById('menuButtonText').value.trim() || "Ver opções";
 
+    if (menuSections.length === 0) {
+      document.getElementById('menuGeneratedJson').textContent = '// Nenhuma seção criada. Adicione seções para gerar o JSON da lista.';
+      return;
+    }
+
     const seenIds = new Set();
     let hadDuplication = false;
 
     const sections = menuSections.map((sec, sIdx) => ({
-      title: sec.title || "Opções",
+      title: sec.title || `Seção ${sIdx + 1}`,
       rows: sec.options.map((opt, oIdx) => {
         let cleanId = sanitizeOptionId(opt.id || opt.title || "opcao");
         if (!cleanId) cleanId = `opcao_${sIdx + 1}_${oIdx + 1}`;
@@ -2042,16 +2041,20 @@ ${switchCases}
           opt.id = finalId;
         }
 
-        return {
+        const rowObj = {
           id: finalId,
-          title: opt.title || "Opção",
-          description: opt.description || ""
+          title: opt.title || `Opção ${oIdx + 1}`
         };
+
+        if (opt.description && opt.description.trim() !== "") {
+          rowObj.description = opt.description.trim();
+        }
+
+        return rowObj;
       })
     }));
 
     if (hadDuplication) {
-      // Re-renderiza de forma sutil para atualizar os inputs se foram alterados
       setTimeout(() => renderMenuSections(), 50);
     }
 
