@@ -1999,6 +1999,29 @@ ${switchCases}
     showToast("IDs corrigidos! Todos os IDs agora são únicos.");
   }
 
+  function updateIdDuplicationVisuals() {
+    const dupes = getDuplicateIds();
+    const warningBanner = document.getElementById('duplicateIdWarning');
+    if (warningBanner) {
+      warningBanner.style.display = dupes.size > 0 ? 'block' : 'none';
+    }
+
+    menuSection.options.forEach((opt, oIdx) => {
+      const input = document.getElementById(`opt_id_${oIdx}`);
+      if (!input) return;
+      const clean = sanitizeOptionId(opt.id || opt.title || "");
+      if (dupes.has(clean)) {
+        input.style.borderColor = 'var(--danger)';
+        input.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.25)';
+        input.title = 'Atenção: Este ID está duplicado!';
+      } else {
+        input.style.borderColor = '';
+        input.style.boxShadow = '';
+        input.title = 'ID único da opção';
+      }
+    });
+  }
+
   function renderMenuOptions() {
     const container = document.getElementById('menuOptionsContainer');
     if (!container) return;
@@ -2050,13 +2073,13 @@ ${switchCases}
 
       html += `
         <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; align-items:center; background:#0F172A; padding:8px; border-radius:6px;">
-          <input type="text" class="form-control" style="font-size:12px; font-family:'JetBrains Mono', monospace; ${borderStyle}" 
+          <input type="text" id="opt_id_${oIdx}" class="form-control" style="font-size:12px; font-family:'JetBrains Mono', monospace; ${borderStyle}" 
             value="${opt.id || ''}" placeholder="id_opcao" title="${isDupe ? 'Atenção: Este ID está duplicado!' : 'ID único da opção'}"
             oninput="onOptionIdInput(${oIdx}, this.value)">
-          <input type="text" class="form-control" style="font-size:12px;" value="${opt.title || ''}" placeholder="Título (obrigatório)" maxlength="24"
+          <input type="text" id="opt_title_${oIdx}" class="form-control" style="font-size:12px;" value="${opt.title || ''}" placeholder="Título (obrigatório)" maxlength="24"
             oninput="onOptionTitleInput(${oIdx}, this.value)">
-          <input type="text" class="form-control" style="font-size:12px;" value="${opt.description || ''}" placeholder="Descrição (opcional)" maxlength="72"
-            oninput="menuSection.options[${oIdx}].description = this.value; generateMenuJson();">
+          <input type="text" id="opt_desc_${oIdx}" class="form-control" style="font-size:12px;" value="${opt.description || ''}" placeholder="Descrição (opcional)" maxlength="72"
+            oninput="onOptionDescInput(${oIdx}, this.value)">
           <span class="schedule-remove-btn" title="Remover opção" onclick="removeMenuOption(${oIdx})">&times;</span>
         </div>
       `;
@@ -2068,22 +2091,38 @@ ${switchCases}
 
   function onSectionTitleInput(val) {
     menuSection.title = val;
+    updateMenuPreview();
     generateMenuJson();
   }
 
   function onOptionIdInput(oIdx, val) {
     menuSection.options[oIdx].id = sanitizeOptionId(val);
     menuSection.options[oIdx]._manualId = true;
-    renderMenuOptions();
+    updateIdDuplicationVisuals();
+    updateMenuPreview();
     generateMenuJson();
   }
 
   function onOptionTitleInput(oIdx, val) {
     menuSection.options[oIdx].title = val;
-    if (!menuSection.options[oIdx]._manualId && !menuSection.options[oIdx].id) {
-      menuSection.options[oIdx].id = sanitizeOptionId(val);
+    // Se o usuário não digitou o ID manualmente, sugere o slug do título automaticamente
+    if (!menuSection.options[oIdx]._manualId) {
+      const cleanSlug = sanitizeOptionId(val);
+      const suggested = cleanSlug || `opcao_${oIdx + 1}`;
+      menuSection.options[oIdx].id = suggested;
+      const idInput = document.getElementById(`opt_id_${oIdx}`);
+      if (idInput) {
+        idInput.value = suggested;
+      }
     }
-    renderMenuOptions();
+    updateIdDuplicationVisuals();
+    updateMenuPreview();
+    generateMenuJson();
+  }
+
+  function onOptionDescInput(oIdx, val) {
+    menuSection.options[oIdx].description = val;
+    updateMenuPreview();
     generateMenuJson();
   }
 
@@ -2248,7 +2287,6 @@ ${switchCases}
     }
 
     const seenIds = new Set();
-    let hadDuplication = false;
 
     const rows = menuSection.options.map((opt, oIdx) => {
       let cleanId = sanitizeOptionId(opt.id || opt.title || "opcao");
@@ -2257,14 +2295,9 @@ ${switchCases}
       let finalId = cleanId;
       let counter = 2;
       while (seenIds.has(finalId)) {
-        hadDuplication = true;
         finalId = `${cleanId}_${counter++}`;
       }
       seenIds.add(finalId);
-
-      if (finalId !== opt.id) {
-        opt.id = finalId;
-      }
 
       const rowObj = {
         id: finalId,
@@ -2277,10 +2310,6 @@ ${switchCases}
 
       return rowObj;
     });
-
-    if (hadDuplication) {
-      setTimeout(() => renderMenuOptions(), 50);
-    }
 
     const sectionTitle = menuSection.title && menuSection.title.trim() !== "" ? menuSection.title.trim() : "Opções";
 
