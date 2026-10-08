@@ -1013,21 +1013,38 @@
       <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px;">
         <div class="card">
           <div class="card-title">Configurações da Mensagem</div>
+          
           <div class="form-group">
-            <label>Título do Cabeçalho (Opcional):</label>
-            <input type="text" class="form-control" id="menuTitle" placeholder="Ex: Central de Atendimento" oninput="updateMenuPreview()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="margin: 0;">Título do Cabeçalho (Opcional):</label>
+              <span id="count_menuTitle" style="font-size: 11px; color: var(--text-dim); font-family: monospace;">0/60</span>
+            </div>
+            <input type="text" class="form-control" id="menuTitle" maxlength="60" placeholder="Ex: Central de Atendimento" oninput="onHeaderInput(this.value)">
           </div>
+
           <div class="form-group">
-            <label>Mensagem Principal / Corpo (Obrigatório):</label>
-            <textarea class="form-control" id="menuBody" rows="3" placeholder="Digite a mensagem que acompanha a lista (ex: Escolha uma das opções abaixo:)" oninput="updateMenuPreview()"></textarea>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="margin: 0;">Mensagem Principal / Corpo (Obrigatório):</label>
+              <span id="count_menuBody" style="font-size: 11px; color: var(--text-dim); font-family: monospace;">0/1024</span>
+            </div>
+            <textarea class="form-control" id="menuBody" maxlength="1024" rows="3" placeholder="Digite a mensagem que acompanha a lista (ex: Escolha uma das opções abaixo:)" oninput="onBodyInput(this.value)"></textarea>
           </div>
+
           <div class="form-group">
-            <label>Texto do Rodapé (Opcional):</label>
-            <input type="text" class="form-control" id="menuFooter" placeholder="Ex: Atendimento automático 24h" oninput="updateMenuPreview()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="margin: 0;">Texto do Rodapé (Opcional):</label>
+              <span id="count_menuFooter" style="font-size: 11px; color: var(--text-dim); font-family: monospace;">0/60</span>
+            </div>
+            <input type="text" class="form-control" id="menuFooter" maxlength="60" placeholder="Ex: Atendimento automático 24h" oninput="onFooterInput(this.value)">
           </div>
+
           <div class="form-group">
-            <label>Texto do Botão de Abertura da Lista (Obrigatório):</label>
-            <input type="text" class="form-control" id="menuButtonText" placeholder="Ex: Escolher opção, Abrir menu..." oninput="updateMenuPreview()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="margin: 0;">Texto do Botão da Lista (Obrigatório, Máx 20):</label>
+              <span id="count_menuButtonText" style="font-size: 11px; color: var(--text-dim); font-family: monospace;">0/20</span>
+            </div>
+            <input type="text" class="form-control" id="menuButtonText" maxlength="20" placeholder="Ex: Escolher opção, Abrir menu..." oninput="onButtonTextInput(this.value)">
+            <div id="warn_buttonText" style="display: none; font-size: 11px; color: #F59E0B; margin-top: 4px;">⚠️ Limite máximo de 20 caracteres atingido (especificação oficial do WhatsApp).</div>
           </div>
 
           <div style="border-top: 1px solid var(--border-color); margin: 20px 0 16px; padding-top: 16px;">
@@ -1037,8 +1054,12 @@
             </div>
 
             <div class="form-group">
-              <label>Título da Seção (Opcional):</label>
-              <input type="text" class="form-control" id="sectionTitle" placeholder="Ex: Atendimento, Serviços..." oninput="onSectionTitleInput(this.value)">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label style="margin: 0;">Título da Seção (Opcional, Máx 24):</label>
+                <span id="count_sectionTitle" style="font-size: 11px; color: var(--text-dim); font-family: monospace;">0/24</span>
+              </div>
+              <input type="text" class="form-control" id="sectionTitle" maxlength="24" placeholder="Ex: Atendimento, Serviços..." oninput="onSectionTitleInput(this.value)">
+              <div id="warn_sectionTitle" style="display: none; font-size: 11px; color: #F59E0B; margin-top: 4px;">⚠️ Limite máximo de 24 caracteres da seção atingido.</div>
             </div>
           </div>
 
@@ -2022,6 +2043,23 @@ ${switchCases}
     });
   }
 
+  function updateAllMenuCharCounters() {
+    const t = document.getElementById('menuTitle')?.value || '';
+    const b = document.getElementById('menuBody')?.value || '';
+    const f = document.getElementById('menuFooter')?.value || '';
+    const btn = document.getElementById('menuButtonText')?.value || '';
+    const st = document.getElementById('sectionTitle')?.value || '';
+
+    const ct = document.getElementById('count_menuTitle'); if (ct) { ct.textContent = `${t.length}/60`; ct.style.color = t.length >= 60 ? '#F59E0B' : 'var(--text-dim)'; }
+    const cb = document.getElementById('count_menuBody'); if (cb) { cb.textContent = `${b.length}/1024`; cb.style.color = b.length >= 1024 ? '#F59E0B' : 'var(--text-dim)'; }
+    const cf = document.getElementById('count_menuFooter'); if (cf) { cf.textContent = `${f.length}/60`; cf.style.color = f.length >= 60 ? '#F59E0B' : 'var(--text-dim)'; }
+    const cbtn = document.getElementById('count_menuButtonText'); if (cbtn) { cbtn.textContent = `${btn.length}/20`; cbtn.style.color = btn.length >= 20 ? '#F59E0B' : 'var(--text-dim)'; }
+    const cst = document.getElementById('count_sectionTitle'); if (cst) { cst.textContent = `${st.length}/24`; cst.style.color = st.length >= 24 ? '#F59E0B' : 'var(--text-dim)'; }
+
+    const wb = document.getElementById('warn_buttonText'); if (wb) wb.style.display = btn.length >= 20 ? 'block' : 'none';
+    const wst = document.getElementById('warn_sectionTitle'); if (wst) wst.style.display = st.length >= 24 ? 'block' : 'none';
+  }
+
   function renderMenuOptions() {
     const container = document.getElementById('menuOptionsContainer');
     if (!container) return;
@@ -2070,17 +2108,35 @@ ${switchCases}
       const currentIdClean = sanitizeOptionId(opt.id || opt.title || "");
       const isDupe = dupes.has(currentIdClean);
       const borderStyle = isDupe ? "border-color: var(--danger); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);" : "";
+      const titleLen = (opt.title || '').length;
+      const descLen = (opt.description || '').length;
 
       html += `
-        <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; align-items:center; background:#0F172A; padding:8px; border-radius:6px;">
-          <input type="text" id="opt_id_${oIdx}" class="form-control" style="font-size:12px; font-family:'JetBrains Mono', monospace; ${borderStyle}" 
-            value="${opt.id || ''}" placeholder="id_opcao" title="${isDupe ? 'Atenção: Este ID está duplicado!' : 'ID único da opção'}"
-            oninput="onOptionIdInput(${oIdx}, this.value)">
-          <input type="text" id="opt_title_${oIdx}" class="form-control" style="font-size:12px;" value="${opt.title || ''}" placeholder="Título (obrigatório)" maxlength="24"
-            oninput="onOptionTitleInput(${oIdx}, this.value)">
-          <input type="text" id="opt_desc_${oIdx}" class="form-control" style="font-size:12px;" value="${opt.description || ''}" placeholder="Descrição (opcional)" maxlength="72"
-            oninput="onOptionDescInput(${oIdx}, this.value)">
-          <span class="schedule-remove-btn" title="Remover opção" onclick="removeMenuOption(${oIdx})">&times;</span>
+        <div style="display:grid; grid-template-columns: 1fr 1.2fr 1.5fr auto; gap:8px; align-items:flex-start; background:#0F172A; padding:10px 8px; border-radius:6px;">
+          <div>
+            <input type="text" id="opt_id_${oIdx}" class="form-control" style="font-size:12px; font-family:'JetBrains Mono', monospace; ${borderStyle}" 
+              value="${opt.id || ''}" placeholder="id_opcao" title="${isDupe ? 'Atenção: Este ID está duplicado!' : 'ID único da opção'}"
+              oninput="onOptionIdInput(${oIdx}, this.value)">
+          </div>
+          <div>
+            <input type="text" id="opt_title_${oIdx}" class="form-control" style="font-size:12px; ${titleLen>=24?'border-color:#F59E0B;':''}" 
+              value="${opt.title || ''}" placeholder="Título (obrigatório)" maxlength="24"
+              oninput="onOptionTitleInput(${oIdx}, this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-dim); margin-top:3px; padding:0 2px;">
+              <span id="warn_opt_title_${oIdx}" style="color:#F59E0B; font-weight:600; display:${titleLen>=24?'inline':'none'};">Máx 24!</span>
+              <span id="count_opt_title_${oIdx}" style="margin-left:auto; font-family:monospace; color:${titleLen>=24?'#F59E0B':'var(--text-dim)'};">${titleLen}/24</span>
+            </div>
+          </div>
+          <div>
+            <input type="text" id="opt_desc_${oIdx}" class="form-control" style="font-size:12px; ${descLen>=72?'border-color:#F59E0B;':''}" 
+              value="${opt.description || ''}" placeholder="Descrição (opcional)" maxlength="72"
+              oninput="onOptionDescInput(${oIdx}, this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-dim); margin-top:3px; padding:0 2px;">
+              <span id="warn_opt_desc_${oIdx}" style="color:#F59E0B; font-weight:600; display:${descLen>=72?'inline':'none'};">Máx 72!</span>
+              <span id="count_opt_desc_${oIdx}" style="margin-left:auto; font-family:monospace; color:${descLen>=72?'#F59E0B':'var(--text-dim)'};">${descLen}/72</span>
+            </div>
+          </div>
+          <span class="schedule-remove-btn" style="margin-top:8px;" title="Remover opção" onclick="removeMenuOption(${oIdx})">&times;</span>
         </div>
       `;
     });
@@ -2089,8 +2145,61 @@ ${switchCases}
     container.innerHTML = html;
   }
 
+  function onHeaderInput(val) {
+    const counter = document.getElementById('count_menuTitle');
+    if (counter) {
+      counter.textContent = `${val.length}/60`;
+      counter.style.color = val.length >= 60 ? '#F59E0B' : 'var(--text-dim)';
+    }
+    updateMenuPreview();
+    generateMenuJson();
+  }
+
+  function onBodyInput(val) {
+    const counter = document.getElementById('count_menuBody');
+    if (counter) {
+      counter.textContent = `${val.length}/1024`;
+      counter.style.color = val.length >= 1024 ? '#F59E0B' : 'var(--text-dim)';
+    }
+    updateMenuPreview();
+    generateMenuJson();
+  }
+
+  function onFooterInput(val) {
+    const counter = document.getElementById('count_menuFooter');
+    if (counter) {
+      counter.textContent = `${val.length}/60`;
+      counter.style.color = val.length >= 60 ? '#F59E0B' : 'var(--text-dim)';
+    }
+    updateMenuPreview();
+    generateMenuJson();
+  }
+
+  function onButtonTextInput(val) {
+    const counter = document.getElementById('count_menuButtonText');
+    const warn = document.getElementById('warn_buttonText');
+    if (counter) {
+      counter.textContent = `${val.length}/20`;
+      counter.style.color = val.length >= 20 ? '#F59E0B' : 'var(--text-dim)';
+    }
+    if (warn) {
+      warn.style.display = val.length >= 20 ? 'block' : 'none';
+    }
+    updateMenuPreview();
+    generateMenuJson();
+  }
+
   function onSectionTitleInput(val) {
     menuSection.title = val;
+    const counter = document.getElementById('count_sectionTitle');
+    const warn = document.getElementById('warn_sectionTitle');
+    if (counter) {
+      counter.textContent = `${val.length}/24`;
+      counter.style.color = val.length >= 24 ? '#F59E0B' : 'var(--text-dim)';
+    }
+    if (warn) {
+      warn.style.display = val.length >= 24 ? 'block' : 'none';
+    }
     updateMenuPreview();
     generateMenuJson();
   }
@@ -2105,7 +2214,23 @@ ${switchCases}
 
   function onOptionTitleInput(oIdx, val) {
     menuSection.options[oIdx].title = val;
-    // Se o usuário não digitou o ID manualmente, sugere o slug do título automaticamente
+    const len = val.length;
+
+    const counter = document.getElementById(`count_opt_title_${oIdx}`);
+    const warn = document.getElementById(`warn_opt_title_${oIdx}`);
+    const titleInput = document.getElementById(`opt_title_${oIdx}`);
+
+    if (counter) {
+      counter.textContent = `${len}/24`;
+      counter.style.color = len >= 24 ? '#F59E0B' : 'var(--text-dim)';
+    }
+    if (warn) {
+      warn.style.display = len >= 24 ? 'inline' : 'none';
+    }
+    if (titleInput) {
+      titleInput.style.borderColor = len >= 24 ? '#F59E0B' : '';
+    }
+
     if (!menuSection.options[oIdx]._manualId) {
       const cleanSlug = sanitizeOptionId(val);
       const suggested = cleanSlug || `opcao_${oIdx + 1}`;
@@ -2122,6 +2247,23 @@ ${switchCases}
 
   function onOptionDescInput(oIdx, val) {
     menuSection.options[oIdx].description = val;
+    const len = val.length;
+
+    const counter = document.getElementById(`count_opt_desc_${oIdx}`);
+    const warn = document.getElementById(`warn_opt_desc_${oIdx}`);
+    const descInput = document.getElementById(`opt_desc_${oIdx}`);
+
+    if (counter) {
+      counter.textContent = `${len}/72`;
+      counter.style.color = len >= 72 ? '#F59E0B' : 'var(--text-dim)';
+    }
+    if (warn) {
+      warn.style.display = len >= 72 ? 'inline' : 'none';
+    }
+    if (descInput) {
+      descInput.style.borderColor = len >= 72 ? '#F59E0B' : '';
+    }
+
     updateMenuPreview();
     generateMenuJson();
   }
@@ -2347,6 +2489,7 @@ ${switchCases}
     menuSection = { title: '', options: [] };
     renderMenuOptions();
     updateMenuPreview();
+    updateAllMenuCharCounters();
     document.getElementById('menuGeneratedJson').textContent = '// Menu limpo. Adicione opções e clique em "Gerar JSON da Lista"';
     showToast('Menu limpo com sucesso!');
   }
@@ -2366,6 +2509,8 @@ ${switchCases}
       ]
     };
     renderMenuOptions();
+    updateMenuPreview();
+    updateAllMenuCharCounters();
     generateMenuJson();
     showToast('Exemplo restaurado!');
   }
@@ -2614,6 +2759,7 @@ ${switchCases}
   // Inicializações
   window.addEventListener('DOMContentLoaded', () => {
     renderMenuOptions();
+    updateAllMenuCharCounters();
     generateMenuJson();
     generateCtaJson();
     renderSchedule();
